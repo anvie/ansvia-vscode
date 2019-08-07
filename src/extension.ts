@@ -2,6 +2,7 @@
 import { window, commands, ExtensionContext, QuickPickItem, Extension } from 'vscode';
 import { generateBloc, BlocOpts } from './bloc';
 import { generateFlutter, FlutterOpts } from './flutter';
+import * as service from './service';
 
 var pascalCase = require('pascal-case');
 
@@ -35,6 +36,20 @@ export function activate(context: ExtensionContext) {
 		const quickPick = window.createQuickPick();
 		quickPick.items = [
             new Cmd("Generate new CRUD flow", () => generateFlutter({statefulScreenPage: true}) ),
+            // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
+        ];
+		quickPick.onDidChangeSelection(selection => {
+			if (selection[0]) {
+                (selection[0] as Cmd).code_action(context).catch(console.error);
+			}
+		});
+		quickPick.onDidHide(() => quickPick.dispose());
+		quickPick.show();
+	}));
+	context.subscriptions.push(commands.registerCommand('extension.mainframe', async () => {
+		const quickPick = window.createQuickPick();
+		quickPick.items = [
+            new Cmd("New Service", () => service.generateCode({name: ''}) ),
             // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
         ];
 		quickPick.onDidChangeSelection(selection => {

@@ -1,6 +1,6 @@
 
 import { window, workspace } from 'vscode';
-import { getRootDir } from './util';
+import { getRootDir, ProjectType } from './util';
 var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
 var pascalCase = require('pascal-case');
@@ -13,7 +13,7 @@ export interface BlocOpts {
 }
 
 export async function generateBloc(opts: BlocOpts) {
-  const rootDir = getRootDir();
+  const rootDir = getRootDir(ProjectType.Mobile);
 
   if (!rootDir) {
     return;

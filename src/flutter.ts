@@ -1,11 +1,12 @@
 
 import { window, workspace } from 'vscode';
-import { getRootDir } from './util';
+import { getRootDir, ProjectType } from './util';
 import { doGenerateBlocCode, BlocOpts } from './bloc';
 
 var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
 var pascalCase = require('pascal-case');
+
 var fs = require('fs');
 var yaml = require('js-yaml');
 
@@ -14,7 +15,7 @@ export interface FlutterOpts {
 }
 
 export async function generateFlutter(opts: FlutterOpts) {
-  const rootDir = getRootDir();
+  const rootDir = getRootDir(ProjectType.Mobile);
 
   if (!rootDir) {
     return;

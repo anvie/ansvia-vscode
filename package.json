@@ -13,7 +13,8 @@
 	],
 	"activationEvents": [
 		"onCommand:extension.ansbloc",
-		"onCommand:extension.flutter"
+		"onCommand:extension.flutter",
+		"onCommand:extension.mainframe"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -25,6 +26,10 @@
 			{
 				"command": "extension.flutter",
 				"title": "ANSVIA: Generate Flutter Code"
+			},
+			{
+				"command": "extension.mainframe",
+				"title": "ANSVIA: Generate Mainframe code"
 			}
         ]
 	},

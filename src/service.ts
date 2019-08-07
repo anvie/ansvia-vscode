@@ -1,0 +1,187 @@
+import { getRootDir, ProjectType } from "./util";
+import { window } from "vscode";
+import { fstat } from "fs";
+
+const snakeCase = require('snake-case');
+const camelCase = require('camel-case');
+const pascalCase = require('pascal-case');
+const fs = require('fs');
+
+
+export interface ServiceOpts {
+    name: String;
+}
+
+export async function generateCode(opts: ServiceOpts) {
+    const rootDir = getRootDir(ProjectType.Server);
+
+    if (!rootDir) {
+        return;
+    }
+
+    console.log("rootDir: " + rootDir);
+
+    const name = await window.showInputBox({
+        value: '',
+        placeHolder: 'Service name, example: Account'
+    }) || "";
+
+    if (name.length == 0) {
+        window.showInformationMessage("No name");
+        return;
+    }
+
+    const path = `${rootDir}/src/api`;
+
+    if (!fs.existsSync(path)) {
+        window.showWarningMessage(`Path not exists: ${path}`);
+        return;
+    }
+
+    opts.name = name;
+
+    generateApiCode(path, opts);
+    generateServiceCode(`${rootDir}/src/service`, opts);
+}
+
+function generateServiceCode(baseDir: String, opts: ServiceOpts) {
+    const namePascal = pascalCase(opts.name);
+    const nameSnake = snakeCase(opts.name);
+
+    const newCode = `impl_service!(${namePascal}Service, ${nameSnake});`;
+
+    fs.appendFileSync(`${baseDir}/services.rs`, newCode);
+}
+
+function generateApiCode(path: String, opts: ServiceOpts) {
+    const namePascal = pascalCase(opts.name);
+    const nameSnake = snakeCase(opts.name);
+
+    const newCode = `
+//! Koleksi query yang digunakan untuk operasi pada rest API.
+#![allow(missing_docs)]
+
+use actix_web::{HttpRequest, HttpResponse};
+use chrono::NaiveDateTime;
+use protobuf;
+use serde::{Deserialize, Serialize};
+use serde_json::Value as JsonValue;
+
+use crate::{
+    api,
+    api::types::*,
+    api::{ApiResult, Error as ApiError, HttpRequest as ApiHttpRequest},
+    auth,
+    dao::${namePascal}Dao,
+    error::{Error, ErrorCode},
+    models,
+    prelude::*,
+    ID,
+};
+
+
+/// New ${namePascal} query 
+#[derive(Serialize, Deserialize)]
+pub struct New${namePascal} {
+    pub name: String,
+}
+
+/// Holder untuk implementasi API endpoint publik untuk ${nameSnake}.
+pub struct PublicApi;
+
+#[api_group("${namePascal}", "public", base = "/${nameSnake}/v1")]
+impl PublicApi {
+    /// Rest API endpoint untuk menambahkan ${nameSnake} baru.
+    #[api_endpoint(path = "/add", mutable, auth = "required")]
+    pub fn add_${nameSnake}(query: New${namePascal}) -> ApiResult<models::${namePascal}> {
+        let conn = state.db();
+        let schema = ${namePascal}Dao::new(&conn);
+
+        // @TODO(*): Add parameter checking here
+
+        schema
+            .create(
+                &query.name,
+            )
+            .map_err(From::from)
+            .map(ApiResult::success)
+    }
+
+    /// Mendapatkan daftar ${nameSnake}
+    #[api_endpoint(path = "/list", auth = "required")]
+    pub fn list_${nameSnake}(query: QueryEntries) -> ApiResult<EntriesResult<models::${namePascal}>> {
+        let conn = state.db();
+        let dao = ${namePascal}Dao::new(&conn);
+
+        let entries = dao.get_${nameSnake}s(query.offset, query.limit)?;
+
+        let count = dao.count()?;
+        Ok(ApiResult::success(EntriesResult { count, entries }))
+    }
+
+    /// Mendapatkan jumlah ${nameSnake} secara keseluruhan.
+    #[api_endpoint(path = "/count", auth = "required")]
+    pub fn ${nameSnake}_count(state: &AppState, query: ()) -> ApiResult<i64> {
+        let conn = state.db();
+        let dao = ${namePascal}Dao::new(&conn);
+
+        dao.count().map(ApiResult::success).map_err(From::from)
+    }
+
+    /// Mendapatkan data ${nameSnake} berdasarkan ID.
+    #[api_endpoint(path = "/info", auth = "required")]
+    pub fn ${nameSnake}_info(query: IdQuery) -> ApiResult<models::${namePascal}> {
+        let conn = state.db();
+        let dao = ${namePascal}Dao::new(&conn);
+
+        dao.get_by_id(query.id)
+            .map(ApiResult::success)
+            .map_err(From::from)
+    }
+
+    /// Delete ${nameSnake}.
+    #[api_endpoint(path = "/delete", auth = "required", mutable="true")]
+    pub fn delete_${nameSnake}(query: IdQuery) -> ApiResult<()> {
+       let conn = state.db();
+       let dao = ${namePascal}Dao::new(&conn);
+
+       dao.delete_by_id(query.id)?;
+
+       Ok(ApiResult::success(()))
+    }
+    
+}
+
+/// Holder untuk implementasi API endpoint privat.
+pub struct PrivateApi;
+
+#[api_group("${namePascal}", "private", base = "/${nameSnake}/v1")]
+impl PrivateApi {}
+`;
+    fs.writeFileSync(`${path}/${nameSnake}.rs`, newCode);
+
+    // add to mod.rs file
+    {
+        const modFile = `${path}/mod.rs`;
+        const modData = fs.readFileSync(modFile).toString();
+
+        var lines = modData.split(/\r?\n/);
+        var newLines = [];
+        var foundPubMod = false;
+        var alreadyInserted = false;
+
+        for (let [i, line] of lines.entries()) {
+            if (!alreadyInserted) {
+                if (line.trim().startsWith("pub mod")) {
+                    foundPubMod = true;
+                } else if (foundPubMod) {
+                    newLines.push(`pub mod ${nameSnake};`);
+                    alreadyInserted = true;
+                }
+            }
+            newLines.push(line);
+        }
+
+        fs.writeFileSync(modFile, newLines.join('\n'));
+    }
+}
