@@ -6,6 +6,7 @@ Ansvia VSCode extension, to simplify programmer's life.
 
 * Generate BloC code in instant.
 * Generate Flutter CRUD UI complete flow.
+* Generate Mainframe service & API code.
 * Generate BloC multi provider code _coming soon_.
 
 ## Build
