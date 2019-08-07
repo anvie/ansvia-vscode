@@ -9,6 +9,7 @@ var yaml = require('js-yaml');
 
 export interface BlocOpts {
   withModel: boolean;
+  commentCode: boolean;
 }
 
 export async function generateBloc(opts: BlocOpts) {
@@ -51,7 +52,7 @@ export function doGenerateBlocCode(projectName: String, rootDir: String, name: S
     fs.mkdirSync(`${libDir}/blocs`);
   }
   var nameSnake = snakeCase(name);
-  if (!fs.existsSync(`${libDir}/blocs/${nameSnake}`)){
+  if (!fs.existsSync(`${libDir}/blocs/${nameSnake}`)) {
     fs.mkdirSync(`${libDir}/blocs/${nameSnake}`);
   }
   if (fs.existsSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_bloc.dart`)) {
@@ -66,13 +67,19 @@ export function doGenerateBlocCode(projectName: String, rootDir: String, name: S
 
     if (opts.withModel) {
       // Generate models
-      fs.writeFileSync(`${libDir}/models/${nameSnake}.dart`, generateModelCode(projectName, name, opts));
+      const path = `${libDir}/models/${nameSnake}.dart`;
+      if (!fs.existsSync(path)) {
+        fs.writeFileSync(path, generateModelCode(projectName, name, opts));
+      } else {
+        opts.commentCode = true;
+        fs.appendFileSync(path, generateModelCode(projectName, name, opts));
+      }
     }
   }
 }
 
 function generateModelCode(projectName: String | undefined, name: String | undefined, opts: BlocOpts) {
-  return `
+  var code = `
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 
@@ -95,6 +102,19 @@ class ${pascalCase(name)} extends Equatable {
   }
 }
 `;
+  var newLines = [];
+  if (opts.commentCode) {
+    newLines.push("// These code bellow are auto-generated, please review and update as you wish");
+  }
+  for (let line of code.split(/\r?\n/)) {
+    if (opts.commentCode) {
+      newLines.push("// " + line);
+    } else {
+      newLines.push(line);
+    }
+  }
+
+  return newLines.join('\n');
 }
 
 function generateBlocCode(projectName: String | undefined, name: String | undefined, opts: BlocOpts) {

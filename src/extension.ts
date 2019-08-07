@@ -20,8 +20,8 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(commands.registerCommand('extension.ansbloc', async () => {
 		const quickPick = window.createQuickPick();
 		quickPick.items = [
-            new Cmd("Generate BloC code (+model)", () => generateBloc({withModel: true}) ),
-            new Cmd("Generate BloC code (-model)", () => generateBloc({withModel: false}) )
+            new Cmd("Generate BloC code (+model)", () => generateBloc({withModel: true, commentCode: false}) ),
+            new Cmd("Generate BloC code (-model)", () => generateBloc({withModel: false, commentCode: false}) )
         ];
 		quickPick.onDidChangeSelection(selection => {
 			if (selection[0]) {

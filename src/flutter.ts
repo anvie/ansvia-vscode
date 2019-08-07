@@ -60,7 +60,7 @@ export async function generateFlutter(opts: FlutterOpts) {
     window.showWarningMessage(`File already exists: ${screenFile}`);
   } else {
     if (opts.statefulScreenPage) {
-      doGenerateBlocCode(projectName, rootDir, name, { withModel: true });
+      doGenerateBlocCode(projectName, rootDir, name, { withModel: true, commentCode: false });
 
       fs.appendFileSync(screenFile, generateStatefulScreenPageCode(projectName, name, opts));
 
@@ -73,10 +73,219 @@ export async function generateFlutter(opts: FlutterOpts) {
 
       // generate item widget
       fs.appendFileSync(`${libDir}/widgets/${nameSnake}_item_view.dart`, generateWidgetCode(projectName, name, opts));
+
+      // generate bloc code for create operation
+      generateBlocCodeForCreateOperation(`${libDir}/blocs`, projectName, name, opts);
+
+      // generate task add page
+      generateAddPage(`${libDir}/screens/${nameSnake}`, projectName, name, opts);
     } else {
       // @TODO(robin): code here
     }
   }
+}
+
+function generateAddPage(baseDir: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts){
+  const projectNameSnake = snakeCase(projectName);
+  const nameSnake = snakeCase(name);
+  const namePascal = pascalCase(name);
+
+  const code = `import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}_add/${nameSnake}_add.dart';
+
+class ${namePascal}AddPage extends StatefulWidget {
+  ${namePascal}AddPage({Key key}) : super(key: key);
+
+  @override
+  State<${namePascal}AddPage> createState() => _${namePascal}AddState();
+}
+
+class _${namePascal}AddState extends State<${namePascal}AddPage> {
+  final _nameController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    final bloc = BlocProvider.of<${namePascal}AddBloc>(context);
+
+    _onAddButtonPressed() {
+      bloc.dispatch(${namePascal}Add(_nameController.text));
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: Text("Add new ${namePascal}")),
+      body: BlocListener<${namePascal}AddBloc, ${namePascal}AddState>(
+          listener: (context, state) {
+        if (state is ${namePascal}Created) {
+          Navigator.pop(context);
+        } else if (state is ${namePascal}AddFailure) {
+          Scaffold.of(context).showSnackBar(SnackBar(
+            content: Text(
+              state.error,
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ));
+        }
+      }, child: BlocBuilder<${namePascal}AddBloc, ${namePascal}AddState>(
+        builder: (context, state) {
+          print("${nameSnake}_add_page.state = $state");
+          return Center(
+            child: ListView(
+              children: <Widget>[
+                Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Form(
+                        child: Column(
+                      children: <Widget>[
+                        TextFormField(
+                          decoration:
+                              InputDecoration(labelText: "${namePascal} name"),
+                          controller: _nameController,
+                        ),
+                        Row(
+                          children: <Widget>[
+                            RaisedButton(
+                              onPressed: state is! ${namePascal}AddLoading
+                                  ? _onAddButtonPressed
+                                  : null,
+                              child: Text("Add"),
+                            )
+                          ],
+                        )
+                      ],
+                    ))),
+              ],
+            ),
+          );
+        },
+      )),
+    );
+  }
+}
+  `;
+  fs.writeFileSync(`${baseDir}/${nameSnake}_add_page.dart`, code.trim());
+}
+
+function generateBlocCodeForCreateOperation(baseDir: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+  const nameSnake = snakeCase(name);
+  const projectNameSnake = snakeCase(projectName);
+  const namePascal = pascalCase(name);
+
+  const blocDir = `${baseDir}/${nameSnake}_add`;
+  if (!fs.existsSync(blocDir)){
+    fs.mkdirSync(blocDir);
+  }
+
+  const blocCode = `
+import 'package:bloc/bloc.dart';
+import 'package:${projectNameSnake}_mobile/api/${projectNameSnake}_api.dart';
+import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}_add/${nameSnake}_add_event.dart';
+import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}_add/${nameSnake}_add_state.dart';
+import 'package:${projectNameSnake}_mobile/models/${nameSnake}.dart';
+
+class ${namePascal}AddBloc extends Bloc<${namePascal}AddEvent, ${namePascal}AddState> {
+  ${namePascal}AddBloc();
+
+  @override
+  ${namePascal}AddState get initialState => ${namePascal}AddInitial();
+
+  @override
+  Stream<${namePascal}AddState> mapEventToState(${namePascal}AddEvent event) async* {
+    if (event is ${namePascal}Add){
+      yield* this._mapCreate${namePascal}ToState(event);
+    }
+  }
+
+  Stream<${namePascal}AddState> _mapCreate${namePascal}ToState(${namePascal}Add event) async* {
+    yield ${namePascal}AddLoading();
+
+    try {
+      final data = await PublicApi.post("/${nameSnake}/v1/add", {
+        "name": event.name
+      });
+      print("resp data: \${data}");
+      final new${namePascal} = ${namePascal}.fromMap(data["result"]);
+      yield ${namePascal}Created(new${namePascal});
+    } catch (error) {
+      yield ${namePascal}AddFailure(error: error.toString());
+    }
+  }
+}
+  
+    `;
+  fs.writeFileSync(`${baseDir}/${nameSnake}_add/${nameSnake}_add_bloc.dart`, blocCode.trim());
+
+  const eventCode = `
+import 'package:equatable/equatable.dart';
+import 'package:meta/meta.dart';
+
+@immutable
+abstract class ${namePascal}AddEvent extends Equatable {
+  ${namePascal}AddEvent([List props = const []]) : super(props);
+}
+
+class ${namePascal}Add extends ${namePascal}AddEvent {
+  final String name;
+
+  ${namePascal}Add(this.name) : super([name]);
+
+  @override
+  String toString() => "${namePascal}Add";
+}
+  
+  `;
+
+  fs.writeFileSync(`${baseDir}/${nameSnake}_add/${nameSnake}_add_event.dart`, eventCode.trim());
+
+  const stateCode = `
+import 'package:equatable/equatable.dart';
+import 'package:meta/meta.dart';
+import 'package:${projectNameSnake}_mobile/models/${nameSnake}.dart';
+
+@immutable
+abstract class ${namePascal}AddState extends Equatable {
+  ${namePascal}AddState([List props = const []]) : super(props);
+}
+
+class ${namePascal}AddInitial extends ${namePascal}AddState {
+  @override
+  String toString() => "${namePascal}AddInitial";
+}
+
+class ${namePascal}AddLoading extends ${namePascal}AddState {
+  @override
+  String toString() => "${namePascal}AddLoading";
+}
+
+class ${namePascal}Created extends ${namePascal}AddState {
+  final ${namePascal} ${nameSnake};
+
+  ${namePascal}Created(this.${nameSnake}) : super([${nameSnake}]);
+
+  @override
+  String toString() => "${namePascal}Created";
+}
+
+class ${namePascal}AddFailure extends ${namePascal}AddState {
+  final String error;
+  ${namePascal}AddFailure({this.error}) : super([error]);
+  @override
+  String toString() => "${namePascal}AddFailure";
+}
+  `;
+
+  fs.writeFileSync(`${baseDir}/${nameSnake}_add/${nameSnake}_add_state.dart`, stateCode.trim());
+
+  const modCode = `
+export './${nameSnake}_add_bloc.dart';
+export './${nameSnake}_add_event.dart';
+export './${nameSnake}_add_state.dart';
+
+  `;
+
+  fs.writeFileSync(`${baseDir}/${nameSnake}_add/${nameSnake}_add.dart`, modCode.trim());
 }
 
 function generateStatefulScreenPageCode(projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
@@ -329,8 +538,8 @@ Stream<${namePascal}State> _mapRemoveToState(Remove${namePascal} event) async* {
   for (let [i, line] of lines.entries()) {
     if (line.startsWith("class") && !alreadyAdded) {
       new_lines.push(`import 'package:localstorage/localstorage.dart';
-import 'package:racta_mobile/models/aaa.dart';
-import 'package:racta_mobile/api/racta_api.dart';
+import 'package:${snakeCase(projectName)}_mobile/models/${nameSnake}.dart';
+import 'package:${snakeCase(projectName)}_mobile/api/${snakeCase(projectName)}_api.dart';
 `);
       new_lines.push(line);
       new_lines.push(`  final LocalStorage _storage = new LocalStorage("bloc.${nameSnake}");`);
