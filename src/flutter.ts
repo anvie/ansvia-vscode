@@ -289,6 +289,8 @@ export './${nameSnake}_add_state.dart';
 }
 
 function generateStatefulScreenPageCode(projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+  const namePascal = pascalCase(name);
+
   return `
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -298,33 +300,33 @@ import 'package:${snakeCase(projectName)}_mobile/models/${snakeCase(name)}.dart'
 import 'package:${snakeCase(projectName)}_mobile/widgets/loading_indicator.dart';
 import 'package:${snakeCase(projectName)}_mobile/widgets/${snakeCase(name)}_item_view.dart';
 
-class ${pascalCase(name)}sPage extends StatefulWidget {
+class ${namePascal}sPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
-    return _${pascalCase(name)}sPage();
+    return _${namePascal}sPage();
   }
 }
 
-class _${pascalCase(name)}sPage extends State<${pascalCase(name)}sPage> {
+class _${namePascal}sPage extends State<${namePascal}sPage> {
     bool _editMode = false;
     bool _blockingLoading = false;
-    List<${pascalCase(name)}> _${snakeCase(name)}s;
+    List<${namePascal}> _${snakeCase(name)}s;
 
-    _${pascalCase(name)}sPage() {
+    _${namePascal}sPage() {
       this._${snakeCase(name)}s = [];
     }
 
     @override
     Widget build(BuildContext context) {
-    final ${snakeCase(name)}Bloc = BlocProvider.of<${pascalCase(name)}Bloc>(context);
+    final ${snakeCase(name)}Bloc = BlocProvider.of<${namePascal}Bloc>(context);
 
     return Scaffold(
         appBar: AppBar(
-        title: Text("${pascalCase(name)}s"),
+        title: Text("${namePascal}s"),
         actions: <Widget>[
             IconButton(
             tooltip: "Edit ${snakeCase(name)}s list",
-            key: ${pascalCase(projectName)}Keys.edit${pascalCase(name)}s,
+            key: ${pascalCase(projectName)}Keys.edit${namePascal}s,
             icon: Icon(Icons.edit),
             onPressed: () {
                 // ${snakeCase(name)}Bloc.dispatch(TurnEditMode());
@@ -337,11 +339,18 @@ class _${pascalCase(name)}sPage extends State<${pascalCase(name)}sPage> {
         ),
         body: _${snakeCase(name)}ListView(context),
         floatingActionButton: FloatingActionButton(
-          key: ${pascalCase(projectName)}Keys.add${pascalCase(name)},
+          key: ${pascalCase(projectName)}Keys.add${namePascal},
           onPressed: () {
-              Navigator.of(context).pushNamed("/${snakeCase(name)}/add").then((result) {
-                ${snakeCase(name)}Bloc.dispatch(Load${pascalCase(name)}List(forceFetch: true));
-              });
+            Navigator.of(context)
+                .push(MaterialPageRoute(
+                    builder: (context) => BlocProvider(
+                        builder: (context) => ${namePascal}AddBloc(),
+                        child: ${namePascal}AddPage(
+                          key: Key("__${camelCase(name)}AddPage__"),
+                        ))))
+                .then((result) {
+              taskBloc.dispatch(Load${namePascal}List(forceFetch: true));
+            });
           },
           child: Icon(Icons.add),
           tooltip: "Create new ${snakeCase(name)}",
@@ -350,8 +359,8 @@ class _${pascalCase(name)}sPage extends State<${pascalCase(name)}sPage> {
     }
 
     Widget _${snakeCase(name)}ListView(BuildContext context) {
-    return BlocListener<${pascalCase(name)}Bloc, ${pascalCase(name)}State>(listener: (context, state) {
-        if (state is ${pascalCase(name)}Failure) {
+    return BlocListener<${namePascal}Bloc, ${namePascal}State>(listener: (context, state) {
+        if (state is ${namePascal}Failure) {
           Scaffold.of(context).showSnackBar(SnackBar(
               content: Text(
                 state.error,
@@ -361,11 +370,11 @@ class _${pascalCase(name)}sPage extends State<${pascalCase(name)}sPage> {
               duration: Duration(seconds: 3),
           ));
           this._blockingLoading = false;
-        } else if (state is ${pascalCase(name)}DeleteSuccess) {
+        } else if (state is ${namePascal}DeleteSuccess) {
           _${snakeCase(name)}s = _${snakeCase(name)}s.where((a) => a.id != state.${snakeCase(name)}Id).toList();
           Scaffold.of(context).showSnackBar(SnackBar(
               content: Text(
-              "${pascalCase(name)} deleted: \${state.name}",
+              "${namePascal} deleted: \${state.name}",
               style: TextStyle(color: Colors.white),
               ),
               backgroundColor: Colors.green,
@@ -373,20 +382,20 @@ class _${pascalCase(name)}sPage extends State<${pascalCase(name)}sPage> {
           ));
           this._blockingLoading = false;
         }
-    }, child: BlocBuilder<${pascalCase(name)}Bloc, ${pascalCase(name)}State>(
-        builder: (BuildContext context, ${pascalCase(name)}State state) {
-        print("${pascalCase(name)}sPage.state: $state");
+    }, child: BlocBuilder<${namePascal}Bloc, ${namePascal}State>(
+        builder: (BuildContext context, ${namePascal}State state) {
+        print("${namePascal}sPage.state: $state");
 
-        // List<${pascalCase(name)}> ${snakeCase(name)}s = List();
+        // List<${namePascal}> ${snakeCase(name)}s = List();
         Widget body = Container();
 
-        if (state is ${pascalCase(name)}Loading) {
+        if (state is ${namePascal}Loading) {
           if (state.block) {
               this._blockingLoading = true;
           } else {
               return LoadingIndicator(key: ${pascalCase(projectName)}Keys.loading);
           }
-        } else if (state is ${pascalCase(name)}ListLoaded) {
+        } else if (state is ${namePascal}ListLoaded) {
           _${snakeCase(name)}s = state.${snakeCase(name)}s;
         }
 
@@ -396,7 +405,7 @@ class _${pascalCase(name)}sPage extends State<${pascalCase(name)}sPage> {
             itemCount: _${snakeCase(name)}s.length,
             itemBuilder: (BuildContext context, int index) {
             final item = _${snakeCase(name)}s[index];
-            return ${pascalCase(name)}ItemView(
+            return ${namePascal}ItemView(
                 item: item,
                 onTap: () {
                 showDialog(
