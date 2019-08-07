@@ -34,7 +34,7 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(commands.registerCommand('extension.flutter', async () => {
 		const quickPick = window.createQuickPick();
 		quickPick.items = [
-            new Cmd("Generate CRUD Screen Page", () => generateFlutter({statefulScreenPage: true}) ),
+            new Cmd("Generate new CRUD flow", () => generateFlutter({statefulScreenPage: true}) ),
             // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
         ];
 		quickPick.onDidChangeSelection(selection => {

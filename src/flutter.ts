@@ -50,7 +50,7 @@ export async function generateFlutter(opts: FlutterOpts) {
   }
   var nameSnake = snakeCase(name);
 
-  if (!fs.existsSync(`${screenDir}/${nameSnake}`)){
+  if (!fs.existsSync(`${screenDir}/${nameSnake}`)) {
     fs.mkdirSync(`${screenDir}/${nameSnake}`);
   }
 
@@ -61,12 +61,15 @@ export async function generateFlutter(opts: FlutterOpts) {
   } else {
     if (opts.statefulScreenPage) {
       doGenerateBlocCode(projectName, rootDir, name, { withModel: true });
+
       fs.appendFileSync(screenFile, generateStatefulScreenPageCode(projectName, name, opts));
 
-      generateEventCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_event.dart`, projectName, name, opts);
+      updateBlocCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_bloc.dart`, projectName, name, opts);
+      updateEventCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_event.dart`, projectName, name, opts);
+      updateStateCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_state.dart`, projectName, name, opts);
 
       // fs.appendFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_event.dart`, generateEventCode(projectName, name, opts));
-      fs.appendFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_state.dart`, generateStateCode(projectName, name, opts));
+      // fs.appendFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_state.dart`, generateStateCode(projectName, name, opts));
 
       // generate item widget
       fs.appendFileSync(`${libDir}/widgets/${nameSnake}_item_view.dart`, generateWidgetCode(projectName, name, opts));
@@ -234,8 +237,115 @@ class _${pascalCase(name)}sPage extends State<${pascalCase(name)}sPage> {
 }
 
 
+function updateBlocCode(path: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+  var nameSnake = snakeCase(name);
+  var namePascal = pascalCase(name);
 
-function generateEventCode(path: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+  var data = fs.readFileSync(path);
+  var lines = data.toString().split(/\r?\n/);
+
+  console.log("lines: ");
+  console.log(lines);
+
+  var new_lines = [];
+  var header = true;
+  var hasImport = false;
+
+  const len = lines.length;
+
+  // get last }
+  var tgtIndex = 0;
+  for (let [i, line] of lines.entries()) {
+    console.log(`line: ${line}: ${i}, ${lines[(len - 2) - i]}`);
+    if (lines[(len - 1) - i].trim() === '}') {
+      tgtIndex = (len - 1) - i;
+      break;
+    }
+  }
+
+
+  const new_code = `
+Stream<${namePascal}State> _mapLoadingToState(Load${namePascal}List event) async* {
+  yield ${namePascal}Loading();
+
+  try {
+    List<${namePascal}> ${nameSnake}s;
+
+    List<dynamic> entries = [];
+
+    if (!event.forceFetch) {
+      // check from local first
+      entries = _storage.getItem("entries");
+    }
+
+    if (entries == null || event.forceFetch) {
+      final data =
+          await PublicApi.get("/${nameSnake}/v1/list?offset=0&limit=20");
+      print("data: $data");
+      entries = data["result"]["entries"] as List;
+    }
+
+    this._storage.setItem("entries", entries);
+
+    ${nameSnake}s = entries.map((p) => ${namePascal}.fromMap(p)).toList();
+
+    yield ${namePascal}ListLoaded(${nameSnake}s);
+  } catch (error) {
+    yield ${namePascal}Failure(error: error.toString());
+  }
+}
+
+Stream<${namePascal}State> _mapRemoveToState(Remove${namePascal} event) async* {
+  yield ${namePascal}Loading(block: true);
+  try {
+    final data = await PublicApi.post(
+        "/${nameSnake}/v1/delete", {"id": event.${nameSnake}.id});
+    print("DELETE RESULT: \${data}");
+
+    List<dynamic> entries = _storage.getItem("entries");
+    entries = entries.where((a) => a["id"] != event.${nameSnake}.id).toList();
+    this._storage.setItem("entries", entries);
+
+    yield ${namePascal}DeleteSuccess(event.${nameSnake}.id, event.${nameSnake}.name);
+  } catch (e) {
+    yield ${namePascal}Failure(error: e.toString());
+  }
+}`;
+
+  for (let [i, line] of lines.entries()) {
+    if (i === tgtIndex) {
+      new_lines.push(new_code);
+      new_lines.push('}');
+    } else {
+      new_lines.push(line);
+    }
+  }
+
+  lines = new_lines;
+  new_lines = [];
+  var alreadyAdded = false;
+
+  // inject 3 imports
+  for (let [i, line] of lines.entries()) {
+    if (line.startsWith("class") && !alreadyAdded) {
+      new_lines.push(`import 'package:localstorage/localstorage.dart';
+import 'package:racta_mobile/models/aaa.dart';
+import 'package:racta_mobile/api/racta_api.dart';
+`);
+      new_lines.push(line);
+      new_lines.push(`  final LocalStorage _storage = new LocalStorage("bloc.${nameSnake}");`);
+      alreadyAdded = true;
+      continue;
+    } else {
+      new_lines.push(line);
+    }
+  }
+
+  fs.writeFileSync(path, new_lines.join('\n'));
+}
+
+
+function updateEventCode(path: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
   var nameSnake = snakeCase(name);
   var namePascal = pascalCase(name);
 
@@ -247,7 +357,7 @@ function generateEventCode(path: String, projectName: String | undefined, name: 
   var hasImport = false;
 
   for (let line of lines) {
-    console.log(line);
+    // console.log(line);
     if (header) {
       if (line.startsWith("import")) {
         hasImport = true;
@@ -292,10 +402,10 @@ class Remove${namePascal} extends ${namePascal}Event {
 }
 
 
-function generateStateCode(projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+function updateStateCode(path: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
   var nameSnake = snakeCase(name);
   var namePascal = pascalCase(name);
-  return `
+  const newCode = `
 
 /// State when deletion of ${namePascal} success.
 class ${namePascal}DeleteSuccess extends ${namePascal}State {
@@ -305,9 +415,9 @@ class ${namePascal}DeleteSuccess extends ${namePascal}State {
   @override
   String toString() => "${namePascal}DeleteSuccess";
 }
-  
-  
 `;
+
+  fs.appendFileSync(path, newCode);
 }
 
 function generateWidgetCode(projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
@@ -354,7 +464,7 @@ class ${namePascal}ItemView extends StatelessWidget {
                   color: Colors.red,
                 ),
                 onPressed: () {
-                  confirmDialog(context, "Delete project \${item.name}", onOk: (){
+                  confirmDialog(context, "Delete ${nameSnake} \${item.name}", onOk: (){
                     bloc.dispatch(Remove${namePascal}(this.item));
                     Navigator.pop(context);
                   });

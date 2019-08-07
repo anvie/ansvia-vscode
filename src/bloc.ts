@@ -51,7 +51,9 @@ export function doGenerateBlocCode(projectName: String, rootDir: String, name: S
     fs.mkdirSync(`${libDir}/blocs`);
   }
   var nameSnake = snakeCase(name);
-  fs.mkdirSync(`${libDir}/blocs/${nameSnake}`);
+  if (!fs.existsSync(`${libDir}/blocs/${nameSnake}`)){
+    fs.mkdirSync(`${libDir}/blocs/${nameSnake}`);
+  }
   if (fs.existsSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_bloc.dart`)) {
     window.showWarningMessage(`File already exists: ${nameSnake}_bloc.dart`);
   } else {
