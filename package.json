@@ -29,7 +29,7 @@
 			},
 			{
 				"command": "extension.mainframe",
-				"title": "ANSVIA: Generate Mainframe code"
+				"title": "ANSVIA: Generate Server code"
 			}
         ]
 	},

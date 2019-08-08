@@ -1,6 +1,7 @@
 import { getRootDir, ProjectType } from "./util";
-import { window } from "vscode";
+import { window, ExtensionContext, commands } from "vscode";
 import { fstat } from "fs";
+import { Cmd } from "./cmd";
 
 const snakeCase = require('snake-case');
 const camelCase = require('camel-case');
@@ -12,7 +13,26 @@ export interface ServiceOpts {
     name: String;
 }
 
-export async function generateCode(opts: ServiceOpts) {
+
+export function setup(context: ExtensionContext) {
+    context.subscriptions.push(commands.registerCommand('extension.mainframe', async () => {
+        const quickPick = window.createQuickPick();
+        quickPick.items = [
+            new Cmd("Generate basic CRUD Service +API", () => generateCode({ name: '' })),
+            // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
+        ];
+        quickPick.onDidChangeSelection(selection => {
+            if (selection[0]) {
+                (selection[0] as Cmd).code_action(context).catch(console.error);
+            }
+        });
+        quickPick.onDidHide(() => quickPick.dispose());
+        quickPick.show();
+    }));
+}
+
+
+async function generateCode(opts: ServiceOpts) {
     const rootDir = getRootDir(ProjectType.Server);
 
     if (!rootDir) {
@@ -26,7 +46,7 @@ export async function generateCode(opts: ServiceOpts) {
         placeHolder: 'Service name, example: Account'
     }) || "";
 
-    if (name.length == 0) {
+    if (name.length === 0) {
         window.showInformationMessage("No name");
         return;
     }
@@ -58,7 +78,7 @@ function generateApiCode(path: String, opts: ServiceOpts) {
     const nameSnake = snakeCase(opts.name);
 
     const newCode = `
-//! Koleksi query yang digunakan untuk operasi pada rest API.
+//! Koleksi query yang digunakan untuk operasi pada rest API ${namePascal}
 #![allow(missing_docs)]
 
 use actix_web::{HttpRequest, HttpResponse};
@@ -160,7 +180,7 @@ impl PrivateApi {}
 `;
     fs.writeFileSync(`${path}/${nameSnake}.rs`, newCode);
 
-    // add to mod.rs file
+    // add pub mod into mod.rs file
     {
         const modFile = `${path}/mod.rs`;
         const modData = fs.readFileSync(modFile).toString();

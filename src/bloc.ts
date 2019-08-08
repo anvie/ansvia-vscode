@@ -79,26 +79,35 @@ export function doGenerateBlocCode(projectName: String, rootDir: String, name: S
 }
 
 function generateModelCode(projectName: String | undefined, name: String | undefined, opts: BlocOpts) {
+  const namePascal = pascalCase(name);
   var code = `
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 
+/// Model for ${name}
 @immutable
-class ${pascalCase(name)} extends Equatable {
+class ${namePascal} extends Equatable {
   final int id;
   final String name;
 
-  ${pascalCase(name)}(this.id, this.name): super([id, name]);
+  ${namePascal}(this.id, this.name): super([id, name]);
 
+  /// Generate Map<String, dynamic> representation for this model.
   Map<String,dynamic> toMap(){
-  Map<String,dynamic> data;
+    Map<String,dynamic> data = Map();
     data['id'] = this.id;
     data['name'] = this.name;
     return data;
   }
 
-  static ${pascalCase(name)} fromMap(Map<String, dynamic> data){
-    return ${pascalCase(name)}(data['id'], data['name']);
+  /// Create ${namePascal} instance from Map<String, dynamic> object.
+  static ${namePascal} fromMap(Map<String, dynamic> data){
+    return ${namePascal}(data['id'], data['name']);
+  }
+
+  /// Clone this object with same id
+  ${namePascal} copy({String name}) {
+    return ${namePascal}(this.id, name ?? this.name);
   }
 }
 `;

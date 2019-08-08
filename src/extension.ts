@@ -1,21 +1,12 @@
 
-import { window, commands, ExtensionContext, QuickPickItem, Extension } from 'vscode';
+import { window, commands, ExtensionContext } from 'vscode';
 import { generateBloc, BlocOpts } from './bloc';
-import { generateFlutter, FlutterOpts } from './flutter';
+import { generateFlutter, FlutterOpts, setup as setupFlutterGen } from './flutter';
 import * as service from './service';
 
+import { Cmd } from './cmd';
+
 var pascalCase = require('pascal-case');
-
-class Cmd implements QuickPickItem {
-    
-    label: string;
-    code_action: (context: ExtensionContext) => Promise<void>;
-
-    constructor(label: string, code_action: (context: ExtensionContext) => Promise<void>){
-        this.label = label;
-        this.code_action = code_action;
-    }
-}
 
 export function activate(context: ExtensionContext) {
 	context.subscriptions.push(commands.registerCommand('extension.ansbloc', async () => {
@@ -32,34 +23,9 @@ export function activate(context: ExtensionContext) {
 		quickPick.onDidHide(() => quickPick.dispose());
 		quickPick.show();
 	}));
-	context.subscriptions.push(commands.registerCommand('extension.flutter', async () => {
-		const quickPick = window.createQuickPick();
-		quickPick.items = [
-            new Cmd("Generate new CRUD flow", () => generateFlutter({statefulScreenPage: true}) ),
-            // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
-        ];
-		quickPick.onDidChangeSelection(selection => {
-			if (selection[0]) {
-                (selection[0] as Cmd).code_action(context).catch(console.error);
-			}
-		});
-		quickPick.onDidHide(() => quickPick.dispose());
-		quickPick.show();
-	}));
-	context.subscriptions.push(commands.registerCommand('extension.mainframe', async () => {
-		const quickPick = window.createQuickPick();
-		quickPick.items = [
-            new Cmd("New Service", () => service.generateCode({name: ''}) ),
-            // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
-        ];
-		quickPick.onDidChangeSelection(selection => {
-			if (selection[0]) {
-                (selection[0] as Cmd).code_action(context).catch(console.error);
-			}
-		});
-		quickPick.onDidHide(() => quickPick.dispose());
-		quickPick.show();
-	}));
+	
+    setupFlutterGen(context);
+	service.setup(context);
 }
 
 // this method is called when your extension is deactivated

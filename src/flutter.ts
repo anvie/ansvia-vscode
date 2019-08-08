@@ -1,7 +1,8 @@
 
-import { window, workspace } from 'vscode';
+import { window, workspace, ExtensionContext, commands } from 'vscode';
 import { getRootDir, ProjectType } from './util';
 import { doGenerateBlocCode, BlocOpts } from './bloc';
+import { Cmd } from './cmd';
 
 var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
@@ -12,6 +13,23 @@ var yaml = require('js-yaml');
 
 export interface FlutterOpts {
   statefulScreenPage: boolean;
+}
+
+export function setup(context: ExtensionContext) {
+  context.subscriptions.push(commands.registerCommand('extension.flutter', async () => {
+    const quickPick = window.createQuickPick();
+    quickPick.items = [
+      new Cmd("Generate new CRUD flow", () => generateFlutter({ statefulScreenPage: true })),
+      // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
+    ];
+    quickPick.onDidChangeSelection(selection => {
+      if (selection[0]) {
+        (selection[0] as Cmd).code_action(context).catch(console.error);
+      }
+    });
+    quickPick.onDidHide(() => quickPick.dispose());
+    quickPick.show();
+  }));
 }
 
 export async function generateFlutter(opts: FlutterOpts) {
@@ -37,7 +55,7 @@ export async function generateFlutter(opts: FlutterOpts) {
 
   // get component name
   const name = await window.showInputBox({
-    value: 'MyComponent',
+    value: '',
     valueSelection: [0, 11],
     placeHolder: 'BloC name, example: TodoBloc'
   }) || "";
@@ -78,20 +96,155 @@ export async function generateFlutter(opts: FlutterOpts) {
       // generate bloc code for create operation
       generateBlocCodeForCreateOperation(`${libDir}/blocs`, projectName, name, opts);
 
-      // generate task add page
+      // generate add page
       generateAddPage(`${libDir}/screens/${nameSnake}`, projectName, name, opts);
+
+      // generate detail page
+      generateDetailPage(`${libDir}/screens/${nameSnake}`, projectName, name, opts);
+
+      // generate bloc code for detail page
+      generateBlocCodeForDetailOperation(`${libDir}/blocs`, projectName, name, opts);
+
     } else {
       // @TODO(robin): code here
     }
   }
 }
 
-function generateAddPage(baseDir: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts){
+function generateDetailPage(baseDir: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+  const projectNameSnake = snakeCase(projectName);
+  const nameSnake = snakeCase(name);
+  const namePascal = pascalCase(name);
+  const nameCamel = camelCase(name);
+
+  const code = `
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}_detail/${nameSnake}_detail.dart';
+import 'package:${projectNameSnake}_mobile/models/${nameSnake}.dart';
+
+class ${namePascal}DetailPage extends StatefulWidget {
+
+  ${namePascal}DetailPage({Key key}) : super(key: key);
+
+  @override
+  State<${namePascal}DetailPage> createState() => _${namePascal}DetailState();
+}
+
+class _${namePascal}DetailState extends State<${namePascal}DetailPage> {
+  ${namePascal} _${nameCamel} = null;
+  bool _blockingLoading = false;
+
+  final _nameController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> widgets = [];
+
+    widgets.add(_buildBody(context));
+
+    if (_blockingLoading) {
+      widgets.add(_modalLoading());
+    }
+
+    final body = new Stack(
+      children: widgets,
+    );
+
+    return Scaffold(
+      appBar: AppBar(title: Text("${namePascal} Detail")),
+      body: body,
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    final bloc = BlocProvider.of<${namePascal}DetailBloc>(context);
+
+    _onEditButtonPressed() {
+      ${namePascal} ${nameCamel} = this._${nameCamel}.copy(name: this._nameController.text);
+      bloc.dispatch(${namePascal}Update(${nameCamel}));
+    }
+
+    return BlocListener<${namePascal}DetailBloc, ${namePascal}DetailState>(
+        listener: (context, state) {
+      if (state is ${namePascal}DetailFailure) {
+        Scaffold.of(context).showSnackBar(SnackBar(
+          content: Text(
+            state.error,
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ));
+      }else if (state is ${namePascal}UpdateSuccess) {
+        Navigator.pop(context, state.${nameCamel});
+      }else if (state is ${namePascal}DetailLoading){
+        if (state.block){
+          this._blockingLoading = true;
+        }
+      }else if (state is ${namePascal}DetailLoaded){
+        this._${nameCamel} = state.${nameCamel};
+        _nameController.text = state.${nameCamel}.name;
+      }
+    }, child: BlocBuilder<${namePascal}DetailBloc, ${namePascal}DetailState>(
+      builder: (context, state) {
+        print("${nameCamel}_detail_page.state = $state");
+        return Center(
+          child: ListView(
+            children: <Widget>[
+              Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Form(
+                      child: Column(
+                    children: <Widget>[
+                      TextFormField(
+                        decoration: InputDecoration(labelText: "${namePascal} name"),
+                        controller: _nameController,
+                      ),
+                      Row(
+                        children: <Widget>[
+                          RaisedButton(
+                            onPressed: state is! ${namePascal}DetailLoading
+                                ? _onEditButtonPressed
+                                : null,
+                            child: Text("UPDATE"),
+                          )
+                        ],
+                      )
+                    ],
+                  ))),
+            ],
+          ),
+        );
+      },
+    ));
+  }
+
+  Widget _modalLoading() {
+    return new Stack(
+      children: <Widget>[
+        new Opacity(
+          opacity: 0.3,
+          child: const ModalBarrier(dismissible: false, color: Colors.grey),
+        ),
+        new Center(
+          child: CircularProgressIndicator(),
+        )
+      ],
+    );
+  }
+}
+`;
+  fs.writeFileSync(`${baseDir}/${nameSnake}_detail_page.dart`, code.trim());
+}
+
+function generateAddPage(baseDir: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
   const projectNameSnake = snakeCase(projectName);
   const nameSnake = snakeCase(name);
   const namePascal = pascalCase(name);
 
-  const code = `import 'package:flutter/material.dart';
+  const code = `// Screen page implementation for ${name} detail.
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}_add/${nameSnake}_add.dart';
 
@@ -141,6 +294,7 @@ class _${namePascal}AddState extends State<${namePascal}AddPage> {
                         child: Column(
                       children: <Widget>[
                         TextFormField(
+                          autofocus: true,
                           decoration:
                               InputDecoration(labelText: "${namePascal} name"),
                           controller: _nameController,
@@ -169,13 +323,175 @@ class _${namePascal}AddState extends State<${namePascal}AddPage> {
   fs.writeFileSync(`${baseDir}/${nameSnake}_add_page.dart`, code.trim());
 }
 
+function generateBlocCodeForDetailOperation(baseDir: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+  const nameSnake = snakeCase(name);
+  const projectNameSnake = snakeCase(projectName);
+  const namePascal = pascalCase(name);
+  const nameCamel = camelCase(name);
+
+  const blocDir = `${baseDir}/${nameSnake}_detail`;
+  if (!fs.existsSync(blocDir)) {
+    fs.mkdirSync(blocDir);
+  }
+
+  const blocCode = `
+import 'package:bloc/bloc.dart';
+import 'package:localstorage/localstorage.dart';
+import 'package:${projectNameSnake}_mobile/api/${projectNameSnake}_api.dart';
+import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}_detail/${nameSnake}_detail_event.dart';
+import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}_detail/${nameSnake}_detail_state.dart';
+import 'package:${projectNameSnake}_mobile/models/${nameSnake}.dart';
+
+class ${namePascal}DetailBloc extends Bloc<${namePascal}DetailEvent, ${namePascal}DetailState> {
+  final LocalStorage _storage = new LocalStorage("bloc.${nameSnake}");
+
+  ${namePascal}DetailBloc();
+
+  @override
+  ${namePascal}DetailState get initialState => ${namePascal}DetailLoading();
+
+  @override
+  Stream<${namePascal}DetailState> mapEventToState(${namePascal}DetailEvent event) async* {
+    if (event is Load${namePascal}Detail) {
+      yield* this._mapLoadToState(event);
+    }else if (event is ${namePascal}Update){
+      yield* this._mapUpdateToState(event);
+    }
+  }
+
+  Stream<${namePascal}DetailState> _mapLoadToState(Load${namePascal}Detail event) async* {
+    yield ${namePascal}DetailLoading(block: true);
+
+    try {
+      final data = await PublicApi.get("/${nameSnake}/v1/detail?id=\${event.${nameSnake}Id}");
+      print("data: $data");
+      Map<String, dynamic> entry = data["result"] as Map;
+
+      this._storage.setItem("detail", entry);
+
+      yield ${namePascal}DetailLoaded(${namePascal}.fromMap(entry));
+    } catch (error) {
+      yield ${namePascal}DetailFailure(error: error.toString());
+    }
+  }
+
+  Stream<${namePascal}DetailState> _mapUpdateToState(${namePascal}Update event) async* {
+    yield ${namePascal}DetailLoading(block: true);
+
+    try {
+      final data = await PublicApi.post("/${nameSnake}/v1/update", {
+        "id": event.${nameCamel}.id,
+        "name": event.${nameCamel}.name,
+      });
+      print("data: $data");
+      Map<String, dynamic> entry = data["result"] as Map;
+
+      this._storage.setItem("detail", entry);
+
+      yield ${namePascal}UpdateSuccess(event.${nameCamel});
+      yield ${namePascal}DetailLoaded(event.${nameCamel});
+    } catch (error) {
+      yield ${namePascal}DetailFailure(error: error.toString());
+    }
+  }
+}
+  
+  
+    `;
+  fs.writeFileSync(`${baseDir}/${nameSnake}_detail/${nameSnake}_detail_bloc.dart`, blocCode.trim());
+
+  const eventCode = `
+import 'package:equatable/equatable.dart';
+import 'package:meta/meta.dart';
+import 'package:${projectNameSnake}_mobile/models/${nameSnake}.dart';
+
+@immutable
+abstract class ${namePascal}DetailEvent extends Equatable {
+  ${namePascal}DetailEvent([List props = const []]) : super(props);
+}
+
+class Load${namePascal}Detail extends ${namePascal}DetailEvent {
+  final int ${nameCamel}Id;
+  Load${namePascal}Detail(this.${nameCamel}Id): super([${nameCamel}Id]);
+
+  @override
+  String toString() => "Load${namePascal}Detail";
+}
+
+class ${namePascal}Update extends ${namePascal}DetailEvent {
+  final ${namePascal} ${nameCamel};
+  ${namePascal}Update(this.${nameCamel}): super([${nameCamel}]);
+  @override
+  String toString() => "${namePascal}Update";
+}
+  
+  `;
+
+  fs.writeFileSync(`${baseDir}/${nameSnake}_detail/${nameSnake}_detail_event.dart`, eventCode.trim());
+
+  const stateCode = `
+
+import 'package:equatable/equatable.dart';
+import 'package:meta/meta.dart';
+import 'package:${projectNameSnake}_mobile/models/${nameSnake}.dart';
+
+@immutable
+abstract class ${namePascal}DetailState extends Equatable {
+    ${namePascal}DetailState([List props = const []]) : super(props);
+}
+
+/// Loading state
+class ${namePascal}DetailLoading extends ${namePascal}DetailState {
+  /// Set true to block screen with blocking loading modal box.
+  final bool block;
+  ${namePascal}DetailLoading({this.block = false});
+  @override
+  String toString() => "${namePascal}DetailLoading";
+}
+
+class ${namePascal}DetailLoaded extends ${namePascal}DetailState {
+  final ${namePascal} ${nameCamel};
+  ${namePascal}DetailLoaded(this.${nameCamel});
+  @override
+  String toString() => "${namePascal}DetailLoaded";
+}
+
+class ${namePascal}UpdateSuccess extends ${namePascal}DetailState {
+  final ${namePascal} ${nameCamel};
+  ${namePascal}UpdateSuccess(this.${nameCamel});
+  @override
+  String toString() => "${namePascal}UpdateSuccess";
+}
+
+/// State when error/failure occurred
+class ${namePascal}DetailFailure extends ${namePascal}DetailState {
+    final String error;
+    ${namePascal}DetailFailure({this.error}): super([error]);
+    @override
+    String toString() => "${namePascal}DetailFailure";
+}      
+  
+  `;
+
+  fs.writeFileSync(`${baseDir}/${nameSnake}_detail/${nameSnake}_detail_state.dart`, stateCode.trim());
+
+  const modCode = `
+export './${nameSnake}_detail_bloc.dart';
+export './${nameSnake}_detail_event.dart';
+export './${nameSnake}_detail_state.dart';
+
+  `;
+
+  fs.writeFileSync(`${baseDir}/${nameSnake}_detail/${nameSnake}_detail.dart`, modCode.trim());
+}
+
 function generateBlocCodeForCreateOperation(baseDir: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
   const nameSnake = snakeCase(name);
   const projectNameSnake = snakeCase(projectName);
   const namePascal = pascalCase(name);
 
   const blocDir = `${baseDir}/${nameSnake}_add`;
-  if (!fs.existsSync(blocDir)){
+  if (!fs.existsSync(blocDir)) {
     fs.mkdirSync(blocDir);
   }
 
@@ -290,16 +606,22 @@ export './${nameSnake}_add_state.dart';
 }
 
 function generateStatefulScreenPageCode(projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+  const nameProjectSnake = snakeCase(projectName);
+  const nameProjectPascal = pascalCase(projectName);
   const namePascal = pascalCase(name);
+  const nameCamel = camelCase(name);
+  const nameSnake = snakeCase(name);
 
   return `
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:${snakeCase(projectName)}_mobile/blocs/${snakeCase(name)}/${snakeCase(name)}.dart';
-import 'package:${snakeCase(projectName)}_mobile/core/core.dart';
-import 'package:${snakeCase(projectName)}_mobile/models/${snakeCase(name)}.dart';
-import 'package:${snakeCase(projectName)}_mobile/widgets/loading_indicator.dart';
-import 'package:${snakeCase(projectName)}_mobile/widgets/${snakeCase(name)}_item_view.dart';
+import 'package:${nameProjectSnake}_mobile/blocs/${nameSnake}/${nameSnake}.dart';
+import 'package:${nameProjectSnake}_mobile/blocs/${nameSnake}_add/${nameSnake}_add_bloc.dart';
+import 'package:${nameProjectSnake}_mobile/core/core.dart';
+import 'package:${nameProjectSnake}_mobile/models/${nameSnake}.dart';
+import 'package:${nameProjectSnake}_mobile/screens/${nameSnake}/${nameSnake}_add_page.dart';
+import 'package:${nameProjectSnake}_mobile/widgets/loading_indicator.dart';
+import 'package:${nameProjectSnake}_mobile/widgets/${nameSnake}_item_view.dart';
 
 class ${namePascal}sPage extends StatefulWidget {
   @override
@@ -311,26 +633,25 @@ class ${namePascal}sPage extends StatefulWidget {
 class _${namePascal}sPage extends State<${namePascal}sPage> {
     bool _editMode = false;
     bool _blockingLoading = false;
-    List<${namePascal}> _${snakeCase(name)}s;
+    List<${namePascal}> _${nameCamel}s;
 
     _${namePascal}sPage() {
-      this._${snakeCase(name)}s = [];
+      this._${nameCamel}s = [];
     }
 
     @override
     Widget build(BuildContext context) {
-    final ${snakeCase(name)}Bloc = BlocProvider.of<${namePascal}Bloc>(context);
+    final ${nameCamel}Bloc = BlocProvider.of<${namePascal}Bloc>(context);
 
     return Scaffold(
         appBar: AppBar(
         title: Text("${namePascal}s"),
         actions: <Widget>[
             IconButton(
-            tooltip: "Edit ${snakeCase(name)}s list",
-            key: ${pascalCase(projectName)}Keys.edit${namePascal}s,
+            tooltip: "Edit ${nameSnake}s list",
+            key: ${nameProjectPascal}Keys.edit${namePascal}s,
             icon: Icon(Icons.edit),
             onPressed: () {
-                // ${snakeCase(name)}Bloc.dispatch(TurnEditMode());
                 setState(() {
                 _editMode = !_editMode;
                 });
@@ -338,28 +659,28 @@ class _${namePascal}sPage extends State<${namePascal}sPage> {
             )
         ],
         ),
-        body: _${snakeCase(name)}ListView(context),
+        body: _${nameSnake}ListView(context, ${nameCamel}Bloc),
         floatingActionButton: FloatingActionButton(
-          key: ${pascalCase(projectName)}Keys.add${namePascal},
+          key: ${nameProjectPascal}Keys.add${namePascal},
           onPressed: () {
             Navigator.of(context)
                 .push(MaterialPageRoute(
                     builder: (context) => BlocProvider(
                         builder: (context) => ${namePascal}AddBloc(),
                         child: ${namePascal}AddPage(
-                          key: Key("__${camelCase(name)}AddPage__"),
+                          key: Key("__${nameCamel}AddPage__"),
                         ))))
                 .then((result) {
-              taskBloc.dispatch(Load${namePascal}List(forceFetch: true));
+              ${nameCamel}Bloc.dispatch(Load${namePascal}List(forceFetch: true));
             });
           },
           child: Icon(Icons.add),
-          tooltip: "Create new ${snakeCase(name)}",
+          tooltip: "Create new ${name}",
         ),
     );
     }
 
-    Widget _${snakeCase(name)}ListView(BuildContext context) {
+    Widget _${nameCamel}ListView(BuildContext context, ${namePascal}Bloc ${nameCamel}Bloc) {
     return BlocListener<${namePascal}Bloc, ${namePascal}State>(listener: (context, state) {
         if (state is ${namePascal}Failure) {
           Scaffold.of(context).showSnackBar(SnackBar(
@@ -372,7 +693,7 @@ class _${namePascal}sPage extends State<${namePascal}sPage> {
           ));
           this._blockingLoading = false;
         } else if (state is ${namePascal}DeleteSuccess) {
-          _${snakeCase(name)}s = _${snakeCase(name)}s.where((a) => a.id != state.${snakeCase(name)}Id).toList();
+          _${nameCamel}s = _${nameCamel}s.where((a) => a.id != state.${nameCamel}Id).toList();
           Scaffold.of(context).showSnackBar(SnackBar(
               content: Text(
               "${namePascal} deleted: \${state.name}",
@@ -387,25 +708,25 @@ class _${namePascal}sPage extends State<${namePascal}sPage> {
         builder: (BuildContext context, ${namePascal}State state) {
         print("${namePascal}sPage.state: $state");
 
-        // List<${namePascal}> ${snakeCase(name)}s = List();
+        // List<${namePascal}> ${nameCamel}s = List();
         Widget body = Container();
 
         if (state is ${namePascal}Loading) {
           if (state.block) {
               this._blockingLoading = true;
           } else {
-              return LoadingIndicator(key: ${pascalCase(projectName)}Keys.loading);
+              return LoadingIndicator(key: ${nameProjectPascal}Keys.loading);
           }
         } else if (state is ${namePascal}ListLoaded) {
-          _${snakeCase(name)}s = state.${snakeCase(name)}s;
+          _${nameCamel}s = state.${nameCamel}s;
         }
 
-        if (this._${snakeCase(name)}s.length > 0) {
+        if (this._${nameCamel}s.length > 0) {
         body = ListView.builder(
-            key: ${pascalCase(projectName)}Keys.${snakeCase(name)}List,
-            itemCount: _${snakeCase(name)}s.length,
+            key: ${nameProjectPascal}Keys.${nameCamel}List,
+            itemCount: _${nameCamel}s.length,
             itemBuilder: (BuildContext context, int index) {
-            final item = _${snakeCase(name)}s[index];
+            final item = _${nameCamel}s[index];
             return ${namePascal}ItemView(
                 item: item,
                 onTap: () {
@@ -419,6 +740,20 @@ class _${namePascal}sPage extends State<${namePascal}sPage> {
                     });
                 },
                 editMode: _editMode,
+                onUpdated: (${namePascal} ${nameCamel}) {
+                  if (${nameCamel} != null) {
+                    print("onUpdated: \${${nameCamel}}");
+                    ${nameCamel}Bloc.dispatch(Update${namePascal}ListItem(${nameCamel}));
+                    Scaffold.of(context).showSnackBar(SnackBar(
+                      content: Text(
+                        "${namePascal} updated",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.green,
+                      duration: Duration(seconds: 2),
+                    ));
+                  }
+                },
             );
             },
         );
@@ -555,6 +890,13 @@ import 'package:${snakeCase(projectName)}_mobile/api/${snakeCase(projectName)}_a
       new_lines.push(`  final LocalStorage _storage = new LocalStorage("bloc.${nameSnake}");`);
       alreadyAdded = true;
       continue;
+    } else if (line.trim() === "// yield* xxx") {
+      new_lines.push(`
+    if (event is Load${namePascal}List) {
+      yield* this._mapLoadingToState(event);
+    } else if (event is Remove${namePascal}) {
+      yield* this._mapRemoveToState(event);
+    }`);
     } else {
       new_lines.push(line);
     }
@@ -607,6 +949,14 @@ class Load${namePascal}List extends ${namePascal}Event {
   String toString() => "Load${namePascal}List";
 }
 
+/// Update ${namePascal} list
+class Update${namePascal}ListItem extends ${namePascal}Event {
+  final ${namePascal} item;
+  Update${namePascal}ListItem(this.item);
+  @override
+  String toString() => "Update${namePascal}ListItem";
+}
+
 /// Event when removing ${namePascal} data
 class Remove${namePascal} extends ${namePascal}Event {
   final ${namePascal} ${nameSnake};
@@ -640,23 +990,29 @@ class ${namePascal}DeleteSuccess extends ${namePascal}State {
 }
 
 function generateWidgetCode(projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+  const projectNameSnake = snakeCase(projectName);
   var nameSnake = snakeCase(name);
   var namePascal = pascalCase(name);
+  var nameCamel = camelCase(name);
   return `
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:${snakeCase(projectName)}_mobile/blocs/${nameSnake}/${nameSnake}.dart';
-import 'package:${snakeCase(projectName)}_mobile/models/${nameSnake}.dart';
-import 'package:${snakeCase(projectName)}_mobile/util/dialog.dart';
+import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}/${nameSnake}.dart';
+import 'package:${projectNameSnake}_mobile/models/${nameSnake}.dart';
+import 'package:${projectNameSnake}_mobile/util/dialog.dart';
+import 'package:${projectNameSnake}_mobile/screens/${nameSnake}/${nameSnake}_detail_page.dart';
+import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}_detail/${nameSnake}_detail_bloc.dart';
+import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}_detail/${nameSnake}_detail_event.dart';
 
 class ${namePascal}ItemView extends StatelessWidget {
   final ${namePascal} item;
   final GestureTapCallback onTap;
   final bool editMode;
+  final Function(${namePascal}) onUpdated;
 
   ${namePascal}ItemView(
-      {Key key, @required this.item, @required this.onTap, this.editMode})
+      {Key key, @required this.item, @required this.onTap, this.editMode, @required this.onUpdated})
       : super(key: key);
 
   @override
@@ -709,6 +1065,18 @@ class ${namePascal}ItemView extends StatelessWidget {
                 // )
               ],
             ),
+            onTap: () {
+              Navigator.of(context)
+                  .push(MaterialPageRoute(
+                      builder: (context) => BlocProvider(
+                          builder: (context) => ${namePascal}DetailBloc()
+                            ..dispatch(Load${namePascal}Detail(item.id)),
+                          child:
+                              ${namePascal}DetailPage(key: Key("__${nameCamel}DetailPage__")))))
+                  .then((result) {
+                this.onUpdated(result);
+              });
+            }
           ),
         ));
   }
