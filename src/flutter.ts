@@ -3,6 +3,10 @@ import { window, workspace, ExtensionContext, commands } from 'vscode';
 import { getRootDir, ProjectType } from './util';
 import { doGenerateBlocCode, BlocOpts } from './bloc';
 import { Cmd } from './cmd';
+import { generatePage, GenPageOpts, PageKind } from './flutter_page';
+import { generateWidget, GenWidgetOpts, WidgetKind } from './flutter_widget';
+import { generateModel, GenModelOpts } from './flutter_model';
+
 
 var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
@@ -20,6 +24,11 @@ export function setup(context: ExtensionContext) {
     const quickPick = window.createQuickPick();
     quickPick.items = [
       new Cmd("Generate new CRUD flow", () => generateFlutter({ statefulScreenPage: true })),
+      new Cmd("Generate List Widget (bloc mode)", () => generateWidget(new GenWidgetOpts(true, WidgetKind.List)) ),
+      new Cmd("Generate List Widget (non bloc mode)", () => generateWidget(new GenWidgetOpts(false, WidgetKind.List)) ),
+      new Cmd("Generate List Item Widget", () => generateWidget(new GenWidgetOpts(false, WidgetKind.ListItem)) ),
+      new Cmd("Generate Model", () => generateModel(new GenModelOpts())),
+      new Cmd("Generate Detail Page", () => generatePage(new GenPageOpts(PageKind.Detail)))
       // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
     ];
     quickPick.onDidChangeSelection(selection => {
