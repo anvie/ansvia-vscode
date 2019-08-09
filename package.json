@@ -1,60 +1,60 @@
 {
-	"name": "ansvia-vscode",
-	"displayName": "Ansvia VScode Extension",
+    "name": "ansvia-vscode",
+    "displayName": "Ansvia VScode Extension",
     "description": "Ansvia VSCode plugin as helper for developers",
     "publisher": "Ansvia",
     "repository": "https://github.com/ansvia/vscode-ansvia-bloc",
-	"version": "0.0.4",
-	"engines": {
-		"vscode": "^1.36.0"
-	},
-	"categories": [
-		"Other"
-	],
-	"activationEvents": [
-		"onCommand:extension.ansbloc",
-		"onCommand:extension.flutter",
-		"onCommand:extension.mainframe"
-	],
-	"main": "./out/extension.js",
-	"contributes": {
-		"commands": [
-			{
-				"command": "extension.ansbloc",
-				"title": "ANSVIA: BloC Generator"
-			},
-			{
-				"command": "extension.flutter",
-				"title": "ANSVIA: Generate Flutter Code"
-			},
-			{
-				"command": "extension.mainframe",
-				"title": "ANSVIA: Generate Server code"
-			}
+    "version": "0.0.6",
+    "engines": {
+        "vscode": "^1.36.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:extension.ansbloc",
+        "onCommand:extension.flutter",
+        "onCommand:extension.mainframe"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "extension.ansbloc",
+                "title": "ANSVIA: BloC Generator"
+            },
+            {
+                "command": "extension.flutter",
+                "title": "ANSVIA: Generate Flutter Code"
+            },
+            {
+                "command": "extension.mainframe",
+                "title": "ANSVIA: Generate Server code"
+            }
         ]
-	},
-	"scripts": {
-		"vscode:prepublish": "yarn run compile",
-		"compile": "tsc -p ./",
-		"watch": "tsc -watch -p ./",
-		"pretest": "yarn run compile",
-		"test": "node ./out/test/runTest.js"
-	},
-	"devDependencies": {
-		"@types/glob": "^7.1.1",
-		"@types/mocha": "^5.2.6",
-		"@types/node": "^10.12.21",
-		"@types/vscode": "^1.36.0",
-		"glob": "^7.1.4",
-		"mocha": "^6.1.4",
-		"typescript": "^3.3.1",
-		"tslint": "^5.12.1",
-		"vscode-test": "^1.0.2"
-	},
-	"dependencies": {
-		"camel-case": "^3.0.0",
-		"js-yaml": "^3.13.1",
-		"pascal-case": "^2.0.1",
-		"snake-case": "^2.1.0"
-	}
+    },
+    "scripts": {
+        "vscode:prepublish": "yarn run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "yarn run compile",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/glob": "^7.1.1",
+        "@types/mocha": "^5.2.6",
+        "@types/node": "^10.12.21",
+        "@types/vscode": "^1.36.0",
+        "glob": "^7.1.4",
+        "mocha": "^6.1.4",
+        "typescript": "^3.3.1",
+        "tslint": "^5.12.1",
+        "vscode-test": "^1.0.2"
+    },
+    "dependencies": {
+        "camel-case": "^3.0.0",
+        "js-yaml": "^3.13.1",
+        "pascal-case": "^2.0.1",
+        "snake-case": "^2.1.0"
+    }
 }
