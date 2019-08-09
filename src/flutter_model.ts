@@ -95,7 +95,7 @@ function _genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) {
     }
     fields.push(`  final ${ty} ${paramName};`);
     toMaps.push(`    data["${paramNameSnake}"] = this.${paramName};`);
-    fromMaps.push(`data['${paramName}'] as ${ty}`);
+    fromMaps.push(`data['${paramNameSnake}'] as ${ty}`);
     copiesParams.push(`${ty} ${paramName}`);
     copiesAssigns.push(`${paramName} ?? this.${paramName}`);
   }

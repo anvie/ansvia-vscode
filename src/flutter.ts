@@ -27,13 +27,20 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate List Widget (bloc mode)", () => generateWidget(new GenWidgetOpts(true, WidgetKind.List)) ),
       new Cmd("Generate List Widget (non bloc mode)", () => generateWidget(new GenWidgetOpts(false, WidgetKind.List)) ),
       new Cmd("Generate List Item Widget", () => generateWidget(new GenWidgetOpts(false, WidgetKind.ListItem)) ),
+      new Cmd("Generate Detail Field Widget", () => generateWidget(new GenWidgetOpts(false, WidgetKind.DetailField, true)) ),
       new Cmd("Generate Model", () => generateModel(new GenModelOpts())),
-      new Cmd("Generate Detail Page", () => generatePage(new GenPageOpts(PageKind.Detail)))
+      new Cmd("Generate Basic Page", () => generatePage(new GenPageOpts(PageKind.Basic))),
+      new Cmd("Generate Detail Page", () => generatePage(new GenPageOpts(PageKind.Detail))),
+      new Cmd("Generate Form Add Page", () => generatePage(new GenPageOpts(PageKind.FormAdd))),
       // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
     ];
     quickPick.onDidChangeSelection(selection => {
       if (selection[0]) {
-        (selection[0] as Cmd).code_action(context).catch(console.error);
+        (selection[0] as Cmd).code_action(context).catch(console.error)
+            .then((result) => {
+                console.log(result);
+                quickPick.dispose();
+            });
       }
     });
     quickPick.onDidHide(() => quickPick.dispose());
@@ -935,7 +942,7 @@ function updateEventCode(path: String, projectName: String | undefined, name: St
         continue;
       } else {
         if (hasImport) {
-          new_lines.push(`import 'package:${snakeCase(projectName)}_mobile/models/${nameSnake}.dart';`)
+          new_lines.push(`import 'package:${snakeCase(projectName)}_mobile/models/${nameSnake}.dart';`);
           header = false;
           continue;
         }

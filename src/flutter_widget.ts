@@ -12,16 +12,19 @@ var fs = require('fs');
 var yaml = require('js-yaml');
 
 export enum WidgetKind {
-  List,
-  ListItem
+  List = 1,
+  ListItem = 2,
+  DetailField = 3,
 }
 
 export class GenWidgetOpts {
   bloc: boolean;
   kind: WidgetKind;
-  constructor(bloc: boolean, kind: WidgetKind) {
+  oneStep: boolean;
+  constructor(bloc: boolean, kind: WidgetKind, oneStep: boolean = false) {
     this.bloc = bloc;
     this.kind = kind;
+    this.oneStep = oneStep;
   }
 }
 
@@ -33,7 +36,7 @@ export async function generateWidget(opts: GenWidgetOpts) {
   }
 
   // get component name
-  const name = await window.showInputBox({
+  const name = opts.oneStep === true ? "" : await window.showInputBox({
     value: '',
     valueSelection: [0, 11],
     placeHolder: 'Widget list item name, eg: Todo'
@@ -59,29 +62,64 @@ export async function generateWidget(opts: GenWidgetOpts) {
   var widgetFilePath = "";
 
   switch (opts.kind) {
-    case WidgetKind.List:
+    case WidgetKind.List: {
       widgetFilePath = `${widgetDir}/${widgetNameDir}/${nameSnake}_list.dart`;
       break;
-    case WidgetKind.ListItem:
+    }
+    case WidgetKind.ListItem: {
       widgetFilePath = `${widgetDir}/${widgetNameDir}/${nameSnake}_item_view.dart`;
       break;
-    default:
+    }
+    case WidgetKind.DetailField: {
+      widgetFilePath = `${widgetDir}/${widgetNameDir}/detail_field.dart`;
+      break;
+    }
+    default: {
       window.showErrorMessage("Unknown kind");
       return;
+    }
   }
 
   if (fs.existsSync(widgetFilePath)) {
     window.showWarningMessage(`File already exists: ${widgetFilePath}`);
   } else {
     switch (opts.kind) {
-      case WidgetKind.List:
+      case WidgetKind.List: {
         fs.writeFileSync(widgetFilePath, _genCodeList(name, flutter, opts));
         break;
-      case WidgetKind.ListItem:
+      }
+      case WidgetKind.ListItem: {
         fs.writeFileSync(widgetFilePath, _genCodeListItem(name, flutter, opts));
         break;
+      }
+      case WidgetKind.DetailField: {
+        fs.writeFileSync(widgetFilePath, _genCodeDetailField(name, flutter, opts));
+        break;
+      }
     }
   }
+}
+
+function _genCodeDetailField(name: String, flutter: FlutterInfo, opts: GenWidgetOpts) {
+  return `
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+
+class DetailField extends StatelessWidget {
+  final String theKey;
+  final String value;
+
+  const DetailField(this.theKey, this.value, {Key key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(this.theKey, style: TextStyle(fontSize: 15)),
+      subtitle: Text(this.value, style: TextStyle(fontSize: 20)),
+    );
+  }
+}
+`.trim();
 }
 
 function _genCodeListItem(name: String, flutter: FlutterInfo, opts: GenWidgetOpts) {
@@ -162,7 +200,7 @@ class ${namePascal}ItemView extends StatelessWidget {
             onTap: () {
               Navigator.of(context)
                   .push(
-                      MaterialPageRoute(builder: (context) => ${namePascal}DetailPage()))
+                      MaterialPageRoute(builder: (context) => ${namePascal}DetailPage(item: item)))
                   .then((result) {
                 // @TODO(*): code here after view item
                 // this.onUpdated(result);

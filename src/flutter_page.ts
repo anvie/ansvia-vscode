@@ -12,7 +12,8 @@ var fs = require('fs');
 
 export enum PageKind {
   Basic,
-  Detail
+  Detail,
+  FormAdd
 }
 
 export class GenPageOpts {
@@ -60,6 +61,8 @@ export async function generatePage(opts: GenPageOpts) {
       break;
     case PageKind.Basic:
       pageFilePath = `${screenDir}/${pageNameDir}/${nameSnake}_page.dart`;
+    case PageKind.FormAdd:
+      pageFilePath = `${screenDir}/${pageNameDir}/${nameSnake}_add_page.dart`;
       break;
   }
 
@@ -71,10 +74,13 @@ export async function generatePage(opts: GenPageOpts) {
   } else {
     switch (opts.kind) {
       case PageKind.Basic:
-        fs.writeFileSync(pageFilePath, _genCode(name, flutter, opts));
+        fs.writeFileSync(pageFilePath, _genCodeBasic(name, flutter, opts));
         break;
       case PageKind.Detail:
         fs.writeFileSync(pageFilePath, await _genCodeDetail(name, flutter, opts));
+        break;
+      case PageKind.FormAdd:
+        fs.writeFileSync(pageFilePath, await _genCodeAddForm(name, flutter, opts));
         break;
     }
     const fileUri = Uri.file(pageFilePath);
@@ -161,91 +167,115 @@ class _${namePascal}DetailPageState extends State<${namePascal}DetailPage> {
 
 }
 
-function _genCode(name: String, flutter: FlutterInfo, opts: GenPageOpts) {
+function _genCodeAddForm(name: String, flutter: FlutterInfo, opts: GenPageOpts) {
   const nameSnake = snakeCase(name);
   const namePascal = pascalCase(name);
 
   return `
-  import 'package:flutter/material.dart';
-  
-  class ${namePascal}Page extends StatefulWidget {
-    ${namePascal}Page({Key key}) : super(key: key);
-  
-    @override
-    State<${namePascal}Page> createState() => _${namePascal}State();
-  }
-  
-  class _${namePascal}State extends State<${namePascal}Page> {
-    final _nameController = TextEditingController();
-  
-    @override
-    Widget build(BuildContext context) {
-      final bloc = BlocProvider.of<${namePascal}Bloc>(context);
-  
-      _onAddButtonPressed() {
-        bloc.dispatch(${namePascal}(_nameController.text, _codeController.text,
-            int.parse(_gradeController.text)));
-      }
-  
-      return Scaffold(
-        appBar: AppBar(title: Text("Add new Project")),
-        body: BlocListener<${namePascal}Bloc, ${namePascal}State>(
-            listener: (context, state) {
-          if (state is ProjectCreated) {
-            Navigator.pop(context);
-          } else if (state is ${namePascal}Failure) {
-            Scaffold.of(context).showSnackBar(SnackBar(
-              content: Text(
-                state.error,
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 3),
-            ));
-          }
-        }, child: BlocBuilder<${namePascal}Bloc, ${namePascal}State>(
-          builder: (context, state) {
-            print("project_add_page.state = $state");
-            return Center(
-              child: ListView(
-                children: <Widget>[
-                  Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Form(
-                          child: Column(
-                        children: <Widget>[
-                          TextFormField(
-                            decoration:
-                                InputDecoration(labelText: "Project name"),
-                            controller: _nameController,
-                          ),
-                          TextFormField(
-                            decoration: InputDecoration(labelText: "Code"),
-                            controller: _codeController,
-                          ),
-                          TextFormField(
-                            decoration: InputDecoration(labelText: "Grade"),
-                            controller: _gradeController,
-                          ),
-                          Row(
-                            children: <Widget>[
-                              RaisedButton(
-                                onPressed: state is! ${namePascal}Loading
-                                    ? _onAddButtonPressed
-                                    : null,
-                                child: Text("Add"),
-                              )
-                            ],
-                          )
-                        ],
-                      ))),
-                ],
-              ),
-            );
-          },
-        )),
-      );
+import 'package:flutter/material.dart';
+
+class ${namePascal}Page extends StatefulWidget {
+  ${namePascal}Page({Key key}) : super(key: key);
+
+  @override
+  State<${namePascal}Page> createState() => _${namePascal}State();
+}
+
+class _${namePascal}State extends State<${namePascal}Page> {
+  final _nameController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    final bloc = BlocProvider.of<${namePascal}Bloc>(context);
+
+    _onAddButtonPressed() {
+      bloc.dispatch(${namePascal}(_nameController.text));
     }
+
+    return Scaffold(
+      appBar: AppBar(title: Text("Add new ${namePascal}")),
+      body: BlocListener<${namePascal}Bloc, ${namePascal}State>(
+          listener: (context, state) {
+        if (state is ${namePascal}Created) {
+          Navigator.pop(context);
+        } else if (state is ${namePascal}Failure) {
+          Scaffold.of(context).showSnackBar(SnackBar(
+            content: Text(
+              state.error,
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ));
+        }
+      }, child: BlocBuilder<${namePascal}Bloc, ${namePascal}State>(
+        builder: (context, state) {
+          return Center(
+            child: ListView(
+              children: <Widget>[
+                Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Form(
+                        child: Column(
+                      children: <Widget>[
+                        TextFormField(
+                          decoration:
+                              InputDecoration(labelText: "${namePascal} name"),
+                          controller: _nameController,
+                        ),
+                        Row(
+                          children: <Widget>[
+                            RaisedButton(
+                              onPressed: state is! ${namePascal}Loading
+                                  ? _onAddButtonPressed
+                                  : null,
+                              child: Text("Add"),
+                            )
+                          ],
+                        )
+                      ],
+                    ))),
+              ],
+            ),
+          );
+        },
+      )),
+    );
   }
+}
+  `;
+}
+
+function _genCodeBasic(name: String, flutter: FlutterInfo, opts: GenPageOpts) {
+  const nameSnake = snakeCase(name);
+  const namePascal = pascalCase(name);
+
+  return `
+class ${namePascal}Page extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(title: Text("Add new ${namePascal}")),
+        body: _getBody(context));
+  }
+
+  Widget _getBody(BuildContext context) {
+    return Center(
+      child: ListView(
+        children: <Widget>[
+          Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Form(
+                  child: Column(
+                children: <Widget>[
+                  // @TODO(you): code here
+                ],
+              ))),
+        ],
+      ),
+    );
+  }
+}
+  
   `;
 }
