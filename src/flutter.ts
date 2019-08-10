@@ -34,6 +34,7 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate Detail Page", () => generatePage(new GenPageOpts(PageKind.Detail))),
       new Cmd("Generate Form Add Page", () => generatePage(new GenPageOpts(PageKind.FormAdd))),
       new Cmd("Generate Autocompletable form field", () => generateFragment(new GenFragmentOpts(FragmentKind.FormAutocompleteField))),
+      new Cmd("Add Model fields", () => generateFragment(new GenFragmentOpts(FragmentKind.ModelAddField))),
       // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
     ];
     quickPick.onDidChangeSelection(selection => {

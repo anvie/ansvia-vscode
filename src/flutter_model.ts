@@ -64,12 +64,12 @@ export async function generateModel(opts: GenModelOpts) {
   if (fs.existsSync(modelFilePath)) {
     window.showWarningMessage(`File already exists: ${modelFilePath}`);
   } else {
-    fs.writeFileSync(modelFilePath, _genCode(name, flutter, opts));
+    fs.writeFileSync(modelFilePath, genCode(name, flutter, opts));
     openAndFormatFile(modelFilePath);
   }
 }
 
-function _genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) {
+export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) {
   const projectNameSnake = snakeCase(flutter.projectName);
   const nameSnake = snakeCase(name);
   const namePascal = pascalCase(name);
@@ -94,6 +94,8 @@ function _genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) {
       ty = "String";
     } else if (_field.endsWith('b')) {
       ty = "bool";
+    } else if (_field.endsWith('d')) {
+      ty = "double";
     }
     fields.push(`  final ${ty} ${paramName};`);
     toMaps.push(`    data["${paramNameSnake}"] = this.${paramName};`);
