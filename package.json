@@ -3,7 +3,7 @@
     "displayName": "Ansvia VScode Extension",
     "description": "Ansvia VSCode plugin as helper for developers",
     "publisher": "Ansvia",
-    "repository": "https://github.com/ansvia/vscode-ansvia-bloc",
+    "repository": "https://github.com/anvie/ansvia-vscode",
     "version": "0.0.9",
     "engines": {
         "vscode": "^1.36.0"
