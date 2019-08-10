@@ -115,11 +115,11 @@ impl PublicApi {
     #[api_endpoint(path = "/add", mutable, auth = "required")]
     pub fn add_${nameSnake}(query: New${namePascal}) -> ApiResult<models::${namePascal}> {
         let conn = state.db();
-        let schema = ${namePascal}Dao::new(&conn);
+        let dao = ${namePascal}Dao::new(&conn);
 
         // @TODO(*): Add parameter checking here
 
-        schema
+        dao
             .create(
                 &query.name,
             )

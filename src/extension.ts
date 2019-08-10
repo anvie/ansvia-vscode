@@ -2,11 +2,9 @@
 import { window, commands, ExtensionContext } from 'vscode';
 import { generateBloc, BlocOpts } from './bloc';
 import { generateFlutter, FlutterOpts, setup as setupFlutterGen } from './flutter';
-import * as service from './service';
+import * as service from './server';
 
 import { Cmd } from './cmd';
-
-var pascalCase = require('pascal-case');
 
 export function activate(context: ExtensionContext) {
 	context.subscriptions.push(commands.registerCommand('extension.ansbloc', async () => {

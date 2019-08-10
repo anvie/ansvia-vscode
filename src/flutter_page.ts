@@ -3,6 +3,7 @@ import { window, workspace, ExtensionContext, commands, Uri, WorkspaceEdit, Text
 import { getRootDir, ProjectType, getFlutterInfo, FlutterInfo } from './util';
 import { doGenerateBlocCode, BlocOpts } from './bloc';
 import { Cmd } from './cmd';
+import { openAndFormatFile } from './flutter_util';
 
 var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
@@ -83,7 +84,9 @@ export async function generatePage(opts: GenPageOpts) {
         fs.writeFileSync(pageFilePath, await _genCodeAddForm(name, flutter, opts));
         break;
     }
-    const fileUri = Uri.file(pageFilePath);
+    openAndFormatFile(pageFilePath);
+    
+    // const fileUri = Uri.file(pageFilePath);
 
     // commands.executeCommand("vscode.executeFormatDocumentProvider", fileUri,
     //   { tabSize: 2, insertSpaces: true, insertFinalNewline: true })
@@ -114,7 +117,7 @@ async function _genCodeDetail(name: String, flutter: FlutterInfo, opts: GenPageO
 
   for (let _att of attrs.split(',')) {
     let att = _att.trim();
-    attrsLines.push(`DetailField("${pascalCase(att)}:", item.${camelCase(att)}),`);
+    attrsLines.push(`DetailField("${pascalCase(att)}:", item.${camelCase(att)})`);
   }
   const rowsAdd = attrsLines.join(',\n                    ');
 
