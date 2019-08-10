@@ -85,20 +85,6 @@ export async function generatePage(opts: GenPageOpts) {
         break;
     }
     openAndFormatFile(pageFilePath);
-    
-    // const fileUri = Uri.file(pageFilePath);
-
-    // commands.executeCommand("vscode.executeFormatDocumentProvider", fileUri,
-    //   { tabSize: 2, insertSpaces: true, insertFinalNewline: true })
-    //   .then((edits) => {
-    //     if (edits !== undefined) {
-    //       let formatEdit = new WorkspaceEdit();
-    //       formatEdit.set(fileUri, edits as TextEdit[]);
-    //       workspace.applyEdit(formatEdit);
-    //       workspace.saveAll();
-    //     }
-    //   },
-    //     (error) => console.error(error));
   }
 }
 

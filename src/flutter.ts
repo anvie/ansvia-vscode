@@ -6,6 +6,7 @@ import { Cmd } from './cmd';
 import { generatePage, GenPageOpts, PageKind } from './flutter_page';
 import { generateWidget, GenWidgetOpts, WidgetKind } from './flutter_widget';
 import { generateModel, GenModelOpts } from './flutter_model';
+import { generateFragment, GenFragmentOpts, FragmentKind } from './flutter_fragment';
 
 
 var snakeCase = require('snake-case');
@@ -32,6 +33,7 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate Basic Page", () => generatePage(new GenPageOpts(PageKind.Basic))),
       new Cmd("Generate Detail Page", () => generatePage(new GenPageOpts(PageKind.Detail))),
       new Cmd("Generate Form Add Page", () => generatePage(new GenPageOpts(PageKind.FormAdd))),
+      new Cmd("Generate Autocompletable form field", () => generateFragment(new GenFragmentOpts(FragmentKind.FormAutocompleteField))),
       // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
     ];
     quickPick.onDidChangeSelection(selection => {
