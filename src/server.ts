@@ -1,7 +1,7 @@
 import { getRootDir, ProjectType } from "./util";
 import { window, ExtensionContext, commands } from "vscode";
-import { fstat } from "fs";
 import { Cmd } from "./cmd";
+import { generateModel, ServerOpts, ServerKind } from "./server_model";
 
 const snakeCase = require('snake-case');
 const camelCase = require('camel-case');
@@ -19,6 +19,8 @@ export function setup(context: ExtensionContext) {
         const quickPick = window.createQuickPick();
         quickPick.items = [
             new Cmd("Generate basic CRUD Service +API", () => generateCode({ name: '' })),
+            new Cmd("Generate model", () => generateModel(new ServerOpts(ServerKind.Model))),
+            new Cmd("Generate DAO", () => generateModel(new ServerOpts(ServerKind.Dao))),
             // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
         ];
         quickPick.onDidChangeSelection(selection => {

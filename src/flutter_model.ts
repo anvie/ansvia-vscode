@@ -51,14 +51,6 @@ export async function generateModel(opts: GenModelOpts) {
   }
   var nameSnake = snakeCase(name);
 
-  // var modelNameDir = nameSnake;
-
-  // if (!fs.existsSync(`${modelDir}/${modelNameDir}`)) {
-  //   fs.mkdirSync(`${modelDir}/${modelNameDir}`);
-  // }
-
-  // var modelFilePath = `${modelDir}/${modelNameDir}/${nameSnake}.dart`;
-
   var modelFilePath = `${modelDir}/${nameSnake}.dart`;
 
   if (fs.existsSync(modelFilePath)) {
@@ -81,25 +73,54 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
   var toMaps = [];
   var copiesParams = [];
   var copiesAssigns = [];
+
   for (let _field of opts.fields) {
-    const paramName = _field.trim().slice(0, -1);
+    var paramName = _field.trim();
+    var tyIsPlural = false;
+    var ty = "String";
+    if (_field.endsWith('i')) {
+      ty = "int";
+      paramName = paramName.slice(0, -1);
+    } else if (_field.endsWith('z')) {
+      ty = "String";
+      paramName = paramName.slice(0, -1);
+    } else if (_field.endsWith('b')) {
+      ty = "bool";
+      paramName = paramName.slice(0, -1);
+    } else if (_field.endsWith('d')) {
+      ty = "double";
+      paramName = paramName.slice(0, -1);
+    } else if (_field.endsWith('b[]')) {
+      ty = "List<bool>";
+      paramName = paramName.slice(0, -3);
+      tyIsPlural = true;
+    } else if (_field.endsWith('d[]')) {
+      ty = "List<double>";
+      paramName = paramName.slice(0, -3);
+      tyIsPlural = true;
+    } else if (_field.endsWith('i[]')) {
+      ty = "List<int>";
+      paramName = paramName.slice(0, -3);
+      tyIsPlural = true;
+    } else if (_field.endsWith('z[]')) {
+      ty = "List<String>";
+      paramName = paramName.slice(0, -3);
+      tyIsPlural = true;
+    }
+
+    console.log("paramName: " + paramName);
+
     const paramNameSnake = snakeCase(paramName);
     params.push(`this.${paramName}`);
     supers.push(paramName);
 
-    var ty = "String";
-    if (_field.endsWith('i')) {
-      ty = "int";
-    } else if (_field.endsWith('z')) {
-      ty = "String";
-    } else if (_field.endsWith('b')) {
-      ty = "bool";
-    } else if (_field.endsWith('d')) {
-      ty = "double";
-    }
     fields.push(`  final ${ty} ${paramName};`);
     toMaps.push(`    data["${paramNameSnake}"] = this.${paramName};`);
-    fromMaps.push(`data['${paramNameSnake}'] as ${ty}`);
+    if (tyIsPlural){
+      fromMaps.push(`List.from(data['${paramNameSnake}'])`);
+    }else{
+      fromMaps.push(`data['${paramNameSnake}'] as ${ty}`);
+    }
     copiesParams.push(`${ty} ${paramName}`);
     copiesAssigns.push(`${paramName} ?? this.${paramName}`);
   }

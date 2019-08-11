@@ -106,7 +106,7 @@ class Param {
 
 async function _patchCodeAddModelField(filePath: string, fieldsStr: string, flutter: FlutterInfo, builder: TextEditorEdit) {
   let reClass = new RegExp('class (\\w*)');
-  let reFieldDecl = new RegExp('final (\\w+) (\\w+);');
+  let reFieldDecl = new RegExp('final (\\w+|List<\\w+>) (\\w+);');
   let reConstructor = new RegExp('\\w+\\(this\\.id.*?\\)');
   // let reConstructorParams = new RegExp();
   let reToMap = new RegExp('data\\["\\w*"\\] = this.\\w*;');
@@ -157,6 +157,18 @@ async function _patchCodeAddModelField(filePath: string, fieldsStr: string, flut
       case "bool": {
         return p.name + 'b';
       }
+      case "list<string>": {
+        return p.name + "z[]";
+      }
+      case "list<double>": {
+        return p.name + "d[]";
+      }
+      case "list<bool>": {
+        return p.name + "b[]";
+      }
+      case "list<int>": {
+        return p.name + "i[]";
+      }
       default:
         return p.name + 'z';
     }
@@ -165,7 +177,7 @@ async function _patchCodeAddModelField(filePath: string, fieldsStr: string, flut
 
   let newContent = flutter_model.genCode(className, flutter, opts);
 
-  builder.replace(new Range(new Position(0,0), new Position(lines.length-1,0)), newContent);
+  builder.replace(new Range(new Position(0,0), new Position(lines.length,0)), newContent);
 
 }
 

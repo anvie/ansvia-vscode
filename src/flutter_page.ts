@@ -129,9 +129,10 @@ class _${namePascal}DetailPageState extends State<${namePascal}DetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: _getBody(context),
-    );
+    return Scaffold(
+        appBar: AppBar(title: Text("${name} Detail"),),
+        body: _getBody(context),
+      );  
   }
 
   Widget _getBody(BuildContext context) {

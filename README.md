@@ -16,7 +16,8 @@ Ansvia VSCode extension, to simplify programmer's life.
 * Generate Flutter form add page.
 * Generate Flutter form autocomplete field.
 * Generate Mainframe service & API code.
-* Generate BloC multi provider code _coming soon_.
+* Generate Mainframe data model.
+* Generate Mainframe model's DAO.
 
 ## Build
 
