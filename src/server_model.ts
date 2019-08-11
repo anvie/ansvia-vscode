@@ -80,7 +80,7 @@ function generateDaoCode(name: String, fields: String[], opts: ServerOpts, build
   for (let _field of fields) {
     var newFieldName = _field.trim();
     var tyIsPlural = false;
-    var ty = "String";
+    var ty = "&'a str";
 
     let s = _field.split(':');
 
@@ -171,14 +171,22 @@ impl<'a> ${namePascal}Dao<'a> {
   }
   newLines.push(`    ) -> Result<${namePascal}> {`);
   newLines.push(`    use crate::schema::${nameSnake}s::{self, dsl};`);
+
   newLines.push(`
     diesel::insert_into(${nameSnake}s::table)
-      .values(&NewCoba { name })
-      .get_result(self.db)
-      .map_err(From::from)
-    }
-}
+        .values(&New${namePascal} {
   `);
+
+  for (let fld of newFields){
+    newLines.push(`            ${fld[0]},`);
+  }
+
+  newLines.push(`
+        })
+        .get_result(self.db)
+        .map_err(From::from)
+  }
+}`);
 
   return newLines.join('\n');
 }
