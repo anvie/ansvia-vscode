@@ -25,10 +25,10 @@ export function setup(context: ExtensionContext) {
     const quickPick = window.createQuickPick();
     quickPick.items = [
       new Cmd("Generate new CRUD flow", () => generateFlutter({ statefulScreenPage: true })),
-      new Cmd("Generate List Widget (bloc mode)", () => generateWidget(new GenWidgetOpts(true, WidgetKind.List)) ),
-      new Cmd("Generate List Widget (non bloc mode)", () => generateWidget(new GenWidgetOpts(false, WidgetKind.List)) ),
-      new Cmd("Generate List Item Widget", () => generateWidget(new GenWidgetOpts(false, WidgetKind.ListItem)) ),
-      new Cmd("Generate Detail Field Widget", () => generateWidget(new GenWidgetOpts(false, WidgetKind.DetailField, true)) ),
+      new Cmd("Generate List Widget (bloc mode)", () => generateWidget(new GenWidgetOpts(true, WidgetKind.List))),
+      new Cmd("Generate List Widget (non bloc mode)", () => generateWidget(new GenWidgetOpts(false, WidgetKind.List))),
+      new Cmd("Generate List Item Widget", () => generateWidget(new GenWidgetOpts(false, WidgetKind.ListItem))),
+      new Cmd("Generate Detail Field Widget", () => generateWidget(new GenWidgetOpts(false, WidgetKind.DetailField, true))),
       new Cmd("Generate Model", () => generateModel(new GenModelOpts())),
       new Cmd("Generate Basic Page", () => generatePage(new GenPageOpts(PageKind.Basic))),
       new Cmd("Generate Detail Page", () => generatePage(new GenPageOpts(PageKind.Detail))),
@@ -40,10 +40,10 @@ export function setup(context: ExtensionContext) {
     quickPick.onDidChangeSelection(selection => {
       if (selection[0]) {
         (selection[0] as Cmd).code_action(context).catch(console.error)
-            .then((result) => {
-                console.log(result);
-                quickPick.dispose();
-            });
+          .then((result) => {
+            console.log(result);
+            quickPick.dispose();
+          });
       }
     });
     quickPick.onDidHide(() => quickPick.dispose());
@@ -381,35 +381,49 @@ class ${namePascal}DetailBloc extends Bloc<${namePascal}DetailEvent, ${namePasca
   Stream<${namePascal}DetailState> _mapLoadToState(Load${namePascal}Detail event) async* {
     yield ${namePascal}DetailLoading(block: true);
 
-    try {
-      final data = await PublicApi.get("/${nameSnake}/v1/detail?id=\${event.${nameSnake}Id}");
+    final data = await PublicApi.get("/${nameSnake}/v1/detail?id=\${event.${camelCase}Id}");
+    if (data != null){
       print("data: $data");
       Map<String, dynamic> entry = data["result"] as Map;
 
       this._storage.setItem("detail", entry);
 
       yield ${namePascal}DetailLoaded(${namePascal}.fromMap(entry));
-    } catch (error) {
-      yield ${namePascal}DetailFailure(error: error.toString());
+    }else{
+      yield ${namePascal}DetailFailure(error: "Cannot get data from server");
     }
   }
 
   Stream<${namePascal}DetailState> _mapUpdateToState(${namePascal}Update event) async* {
     yield ${namePascal}DetailLoading(block: true);
 
-    try {
-      final data = await PublicApi.post("/${nameSnake}/v1/update", {
-        "id": event.${nameCamel}.id,
-        "name": event.${nameCamel}.name,
-      });
+    final data = await PublicApi.post("/${nameSnake}/v1/update", {
+      "id": event.${nameCamel}.id,
+      "name": event.${nameCamel}.name,
+    });
+    if (data != null){
       print("data: $data");
       Map<String, dynamic> entry = data["result"] as Map;
 
       this._storage.setItem("detail", entry);
 
+      List<dynamic> entries = _storage.getItem("entries");
+
+      // Update local data
+      if (entries != null) {
+        entries = entries.map((a) {
+          if (a["id"] == event.${nameCamel}.id) {
+            return event.${nameCamel}.toMap();
+          } else {
+            return a;
+          }
+        }).toList();
+        _storage.setItem("entries", entries);
+      }
+
       yield ${namePascal}UpdateSuccess(event.${nameCamel});
       yield ${namePascal}DetailLoaded(event.${nameCamel});
-    } catch (error) {
+    }else{
       yield ${namePascal}DetailFailure(error: error.toString());
     }
   }
@@ -678,7 +692,7 @@ class _${namePascal}sPage extends State<${namePascal}sPage> {
             )
         ],
         ),
-        body: _${nameSnake}ListView(context, ${nameCamel}Bloc),
+        body: _${nameCamel}ListView(context, ${nameCamel}Bloc),
         floatingActionButton: FloatingActionButton(
           key: ${nameProjectPascal}Keys.add${namePascal},
           onPressed: () {
@@ -761,11 +775,11 @@ class _${namePascal}sPage extends State<${namePascal}sPage> {
                 editMode: _editMode,
                 onUpdated: (${namePascal} ${nameCamel}) {
                   if (${nameCamel} != null) {
-                    print("onUpdated: \${${nameCamel}}");
+                    print("onUpdated: \$${nameCamel}");
                     ${nameCamel}Bloc.dispatch(Update${namePascal}ListItem(${nameCamel}));
                     Scaffold.of(context).showSnackBar(SnackBar(
                       content: Text(
-                        "${namePascal} updated",
+                        "${name} updated",
                         style: TextStyle(color: Colors.white),
                       ),
                       backgroundColor: Colors.green,
@@ -813,6 +827,7 @@ class _${namePascal}sPage extends State<${namePascal}sPage> {
 function updateBlocCode(path: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
   var nameSnake = snakeCase(name);
   var namePascal = pascalCase(name);
+  var nameCamel = camelCase(name);
 
   var data = fs.readFileSync(path);
   var lines = data.toString().split(/\r?\n/);
@@ -841,30 +856,31 @@ function updateBlocCode(path: String, projectName: String | undefined, name: Str
 Stream<${namePascal}State> _mapLoadingToState(Load${namePascal}List event) async* {
   yield ${namePascal}Loading();
 
-  try {
-    List<${namePascal}> ${nameSnake}s;
 
-    List<dynamic> entries = [];
+  List<${namePascal}> ${nameCamel}s;
 
-    if (!event.forceFetch) {
-      // check from local first
-      entries = _storage.getItem("entries");
-    }
+  List<dynamic> entries = [];
 
-    if (entries == null || event.forceFetch) {
-      final data =
-          await PublicApi.get("/${nameSnake}/v1/list?offset=0&limit=20");
+  if (!event.forceFetch) {
+    // check from local first
+    entries = _storage.getItem("entries");
+  }
+
+  if (entries == null || event.forceFetch) {
+    final data =
+        await PublicApi.get("/${nameSnake}/v1/list?offset=0&limit=20");
+    if (data != null){
       print("data: $data");
       entries = data["result"]["entries"] as List;
+    }else{
+      yield ${namePascal}Failure(error: error.toString());
     }
+  }
 
+  if (entries.length > 0){
     this._storage.setItem("entries", entries);
-
-    ${nameSnake}s = entries.map((p) => ${namePascal}.fromMap(p)).toList();
-
-    yield ${namePascal}ListLoaded(${nameSnake}s);
-  } catch (error) {
-    yield ${namePascal}Failure(error: error.toString());
+    ${nameCamel}s = entries.map((p) => ${namePascal}.fromMap(p)).toList();
+    yield ${namePascal}ListLoaded(${nameCamel}s);
   }
 }
 
@@ -873,7 +889,7 @@ Stream<${namePascal}State> _mapRemoveToState(Remove${namePascal} event) async* {
   try {
     final data = await PublicApi.post(
         "/${nameSnake}/v1/delete", {"id": event.${nameSnake}.id});
-    print("DELETE RESULT: \${data}");
+    print("DELETE RESULT: \$data");
 
     List<dynamic> entries = _storage.getItem("entries");
     entries = entries.where((a) => a["id"] != event.${nameSnake}.id).toList();
@@ -1036,7 +1052,7 @@ class ${namePascal}ItemView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ${namePascal}Bloc bloc = BlocProvider.of<${namePascal}Bloc>(context);
+    ${namePascal}Bloc ${nameCamel}Bloc = BlocProvider.of<${namePascal}Bloc>(context);
 
     return Card(
         elevation: 8.0,
@@ -1059,7 +1075,7 @@ class ${namePascal}ItemView extends StatelessWidget {
                 ),
                 onPressed: () {
                   confirmDialog(context, "Delete ${nameSnake} \${item.name}", onOk: (){
-                    bloc.dispatch(Remove${namePascal}(this.item));
+                    ${nameCamel}Bloc.dispatch(Remove${namePascal}(this.item));
                     Navigator.pop(context);
                   });
                 },
@@ -1094,6 +1110,7 @@ class ${namePascal}ItemView extends StatelessWidget {
                               ${namePascal}DetailPage(key: Key("__${nameCamel}DetailPage__")))))
                   .then((result) {
                 this.onUpdated(result);
+                ${nameCamel}Bloc.dispatch(LoadProjectStepList(forceFetch: false));
               });
             }
           ),

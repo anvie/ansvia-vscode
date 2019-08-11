@@ -34,8 +34,12 @@ export async function generateModel(opts: GenModelOpts) {
 
   const fieldsStr = await window.showInputBox({
     value: '',
-    placeHolder: 'Fields names, eg: namez,agei,phonez,emailz,activeb'
+    placeHolder: 'Fields names, eg: name:z,age:i,phone:z,email:z,active:b'
   }) || "";
+
+  if (fieldsStr === ""){
+    return;
+  }
 
   var fields: string[] = fieldsStr.split(',');
   opts.fields = fields;
@@ -73,56 +77,87 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
   var toMaps = [];
   var copiesParams = [];
   var copiesAssigns = [];
+  var newFields = [];
 
   for (let _field of opts.fields) {
-    var paramName = _field.trim();
+    var newFieldName = _field.trim();
     var tyIsPlural = false;
     var ty = "String";
-    if (_field.endsWith('i')) {
-      ty = "int";
-      paramName = paramName.slice(0, -1);
-    } else if (_field.endsWith('z')) {
-      ty = "String";
-      paramName = paramName.slice(0, -1);
-    } else if (_field.endsWith('b')) {
-      ty = "bool";
-      paramName = paramName.slice(0, -1);
-    } else if (_field.endsWith('d')) {
-      ty = "double";
-      paramName = paramName.slice(0, -1);
-    } else if (_field.endsWith('b[]')) {
-      ty = "List<bool>";
-      paramName = paramName.slice(0, -3);
-      tyIsPlural = true;
-    } else if (_field.endsWith('d[]')) {
-      ty = "List<double>";
-      paramName = paramName.slice(0, -3);
-      tyIsPlural = true;
-    } else if (_field.endsWith('i[]')) {
-      ty = "List<int>";
-      paramName = paramName.slice(0, -3);
-      tyIsPlural = true;
-    } else if (_field.endsWith('z[]')) {
-      ty = "List<String>";
-      paramName = paramName.slice(0, -3);
-      tyIsPlural = true;
+
+    let s = _field.split(':');
+
+    if (s.length === 1) {
+      s.push('z');
+    }
+    newFieldName = s[0];
+
+    switch (s[1]) {
+      case 'id': {
+        ty = "int";
+        break;
+      }
+      case 'z': {
+        ty = "String";
+        break;
+      }
+      case 'b': {
+        ty = "bool";
+        break;
+      }
+      case 'dt': {
+        ty = "String";
+        break;
+      }
+      case 'i':
+      case 'i32': {
+        ty = "int";
+        break;
+      }
+      case 'i64': {
+        ty = "int";
+        break;
+      }
+      case 'z[]': {
+        tyIsPlural = true;
+        ty = "List<String>";
+        break;
+      }
+      case 'i[]':
+      case 'i32[]': {
+        tyIsPlural = true;
+        ty = "List<int>";
+        break;
+      }
+      case 'i[]':
+      case 'i64[]': {
+        tyIsPlural = true;
+        ty = "List<int>";
+        break;
+      }
+      case 'b[]': {
+        tyIsPlural = true;
+        ty = "List<bool>";
+        break;
+      }
     }
 
-    console.log("paramName: " + paramName);
+    console.log("paramName: " + newFieldName);
 
-    const paramNameSnake = snakeCase(paramName);
-    params.push(`this.${paramName}`);
-    supers.push(paramName);
+    const newFieldNameSnake = snakeCase(newFieldName);
+    const newFieldNameCamel = camelCase(newFieldName);
 
-    fields.push(`  final ${ty} ${paramName};`);
-    toMaps.push(`    data["${paramNameSnake}"] = this.${paramName};`);
+    params.push(`this.${newFieldNameCamel}`);
+    supers.push(newFieldNameCamel);
+
+    fields.push(`  final ${ty} ${newFieldNameCamel};`);
+    toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel};`);
     if (tyIsPlural){
-      fromMaps.push(`List.from(data['${paramNameSnake}'])`);
+      fromMaps.push(`List.from(data['${newFieldNameSnake}'])`);
     }else{
-      fromMaps.push(`data['${paramNameSnake}'] as ${ty}`);
+      fromMaps.push(`data['${newFieldNameSnake}'] as ${ty}`);
     }
-    copiesParams.push(`${ty} ${paramName}`);
-    copiesAssigns.push(`${paramName} ?? this.${paramName}`);
+    copiesParams.push(`${ty} ${newFieldNameCamel}`);
+    copiesAssigns.push(`${newFieldNameCamel} ?? this.${newFieldNameCamel}`);
   }
   var paramsAdd = "";
   if (params.length > 0) {

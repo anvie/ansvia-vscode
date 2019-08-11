@@ -173,6 +173,8 @@ class Load${namePascal} extends ${namePascal}Event {
 function generateStateCode(projectName: String | undefined, name: String | undefined, opts: BlocOpts) {
   var nameSnake = snakeCase(name);
   var namePascal = pascalCase(name);
+  var nameCamel = camelCase(name);
+
   var rv = `
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
@@ -201,9 +203,9 @@ class ${namePascal}Loading extends ${namePascal}State {
 
   if (opts.withModel) {
     rv = rv + `class ${namePascal}ListLoaded extends ${namePascal}State {
-    final List<${namePascal}> ${nameSnake}s;
+    final List<${namePascal}> ${nameCamel}s;
 
-    ${namePascal}ListLoaded(this.${nameSnake}s) : super([${nameSnake}s]);
+    ${namePascal}ListLoaded(this.${nameCamel}s) : super([${nameCamel}s]);
 
     @override
     String toString() => "${namePascal}ListLoaded";

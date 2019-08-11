@@ -3,6 +3,7 @@ import { window, Selection, Position, Range, TextEditorEdit, WorkspaceEdit, Text
 import { getFlutterInfo, FlutterInfo } from './util';
 import { openAndFormatFile, reformatDocument } from './flutter_util';
 import * as flutter_model from './flutter_model';
+import { print } from 'util';
 
 var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
@@ -35,7 +36,7 @@ export async function generateFragment(opts: GenFragmentOpts) {
   const name = opts.oneStep === true ? "" : await window.showInputBox({
     value: '',
     valueSelection: [0, 11],
-    placeHolder: 'Widget list item name, eg: name'
+    placeHolder: 'Fields, eg: name:z,active:b,categories:z[]'
   }) || "";
 
   var libDir = `${flutter.projectDir}/lib`;
@@ -113,7 +114,7 @@ async function _patchCodeAddModelField(filePath: string, fieldsStr: string, flut
 
   let lines = window.activeTextEditor!.document.getText().split('\n');
 
-  let fieldsStrList = fieldsStr.split(',');
+  let fieldsStrList = fieldsStr.split(',').map((a) => a.trim());
 
   var className = "";
   let params:Param[] = [];
@@ -146,34 +147,40 @@ async function _patchCodeAddModelField(filePath: string, fieldsStr: string, flut
   opts.fields = params.map((p) => {
     switch(p.ty.toLowerCase()){
       case "int": {
-        return p.name + 'i';
+        return p.name + ':i';
       }
       case "string": {
-        return p.name + 'z';
+        return p.name + ':z';
       }
       case "double": {
-        return p.name + 'd';
+        return p.name + ':d';
       }
       case "bool": {
-        return p.name + 'b';
+        return p.name + ':b';
       }
       case "list<string>": {
-        return p.name + "z[]";
+        return p.name + ":z[]";
       }
       case "list<double>": {
-        return p.name + "d[]";
+        return p.name + ":d[]";
       }
       case "list<bool>": {
-        return p.name + "b[]";
+        return p.name + ":b[]";
       }
       case "list<int>": {
-        return p.name + "i[]";
+        return p.name + ":i[]";
       }
       default:
-        return p.name + 'z';
+        return p.name + ':z';
     }
   });
-  opts.fields.push(fieldsStr);
+
+  console.log(`fieldsStrList: ${fieldsStrList}`);
+  opts.fields = opts.fields.concat(fieldsStrList);
+
+  console.log("opts.fields:");
+  console.log(opts.fields);
+  
 
   let newContent = flutter_model.genCode(className, flutter, opts);
 
@@ -196,8 +203,13 @@ async function _patchCode(filePath: string, name: String, flutter: FlutterInfo, 
   const suggestionCode = `
   Future<List<dynamic>> get${namePascal}Suggestions(String query){
     return PublicApi.get("/${nameSnake}/v1/search?query=$query&offset=0&limit=10").then((data){
-      List<dynamic> entries = data["result"]["entries"] as List;
-      return entries.map((d) => d["name"]).toList();
+      if (data != null) {
+        List<dynamic> entries = data["result"]["entries"] as List;
+        return entries.map((d) => d["name"]).toList();
+      } else {
+        throw ${pascalCase(flutter.projectName)}Exception(
+            "Cannot contact API server for getting suggestions");
+      }
     });
   }
 `;
