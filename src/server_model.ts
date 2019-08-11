@@ -150,7 +150,7 @@ pub struct ${namePascal}Dao<'a> {
 }
 
 #[derive(Insertable)]
-#[table_name = "cobas"]
+#[table_name = "${nameSnake}s"]
 struct New${namePascal}<'a> {
     `.trim());
 
@@ -172,7 +172,7 @@ impl<'a> ${namePascal}Dao<'a> {
   newLines.push(`    ) -> Result<${namePascal}> {`);
   newLines.push(`    use crate::schema::${nameSnake}s::{self, dsl};`);
   newLines.push(`
-    diesel::insert_into(cobas::table)
+    diesel::insert_into(${nameSnake}s::table)
       .values(&NewCoba { name })
       .get_result(self.db)
       .map_err(From::from)
