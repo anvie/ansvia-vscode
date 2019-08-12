@@ -223,8 +223,6 @@ function _genCodeList(name: String, flutter: FlutterInfo, opts: GenWidgetOpts) {
   var newLines = [];
   newLines.push(`import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 `);
 
   if (opts.bloc) {
@@ -242,34 +240,34 @@ import 'package:${projectNameSnake}_mobile/widgets/${nameSnake}/${nameSnake}_ite
   if (opts.bloc) {
 
     newLines.push(`
-  /// List for ${name} widget
-  class ${namePascal}List extends StatelessWidget {
-  
-    ${namePascal}List(BuildContext context) {}
-  
-    @override
-    Widget build(BuildContext context) {
+/// List widget for ${name}
+class ${namePascal}List extends StatelessWidget {
+
+  ${namePascal}List(BuildContext context) {}
+
+  @override
+  Widget build(BuildContext context) {
       return BlocBuilder<${namePascal}Bloc, ${namePascal}State>(
-        builder: (context, state) {
+      builder: (context, state) {
           if (state is ${namePascal}ListLoading) {
-            return LoadingIndicator(key: RactaKeys.loading);
+          return LoadingIndicator(key: RactaKeys.loading);
           } else if (state is ${namePascal}ListLoaded) {
-            final List<${namePascal}> ${nameCamel}s = state.${nameCamel}s;
-            return ListView.builder(
-              key: RactaKeys.todoList,
+          final List<${namePascal}> ${nameCamel}s = state.${nameCamel}s;
+          return ListView.builder(
+              key: RactaKeys.${nameCamel}List,
               itemCount: ${nameCamel}s.length,
               itemBuilder: (BuildContext context, int index) {
-                final item = ${nameCamel}s[index];
-                return new ${namePascal}ItemView(item: item);
+              final item = ${nameCamel}s[index];
+              return new ${namePascal}ItemView(item: item);
               },
-            );
+          );
           } else {
-            return Text("Unknown state");
+          return Text("Unknown state");
           }
-        },
+      },
       );
-    }
   }
+}
   `);
   }
   else {

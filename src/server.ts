@@ -151,8 +151,8 @@ impl PublicApi {
     }
 
     /// Mendapatkan data ${nameSnake} berdasarkan ID.
-    #[api_endpoint(path = "/info", auth = "required")]
-    pub fn ${nameSnake}_info(query: IdQuery) -> ApiResult<models::${namePascal}> {
+    #[api_endpoint(path = "/detail", auth = "required")]
+    pub fn ${nameSnake}_detail(query: IdQuery) -> ApiResult<models::${namePascal}> {
         let conn = state.db();
         let dao = ${namePascal}Dao::new(&conn);
 

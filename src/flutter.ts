@@ -30,12 +30,11 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate List Item Widget", () => generateWidget(new GenWidgetOpts(false, WidgetKind.ListItem))),
       new Cmd("Generate Detail Field Widget", () => generateWidget(new GenWidgetOpts(false, WidgetKind.DetailField, true))),
       new Cmd("Generate Model", () => generateModel(new GenModelOpts())),
+      new Cmd("Add Model fields", () => generateFragment(new GenFragmentOpts(FragmentKind.ModelAddField))),
       new Cmd("Generate Basic Page", () => generatePage(new GenPageOpts(PageKind.Basic))),
       new Cmd("Generate Detail Page", () => generatePage(new GenPageOpts(PageKind.Detail))),
       new Cmd("Generate Form Add Page", () => generatePage(new GenPageOpts(PageKind.FormAdd))),
       new Cmd("Generate Autocompletable form field", () => generateFragment(new GenFragmentOpts(FragmentKind.FormAutocompleteField))),
-      new Cmd("Add Model fields", () => generateFragment(new GenFragmentOpts(FragmentKind.ModelAddField))),
-      // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
     ];
     quickPick.onDidChangeSelection(selection => {
       if (selection[0]) {
