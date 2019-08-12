@@ -117,6 +117,10 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
         ty = "int";
         break;
       }
+      case 'd': {
+        ty = "double";
+        break;
+      }
       case 'z[]': {
         tyIsPlural = true;
         ty = "List<String>";
