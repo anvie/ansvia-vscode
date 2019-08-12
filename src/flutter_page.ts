@@ -158,20 +158,26 @@ class _${namePascal}DetailPageState extends State<${namePascal}DetailPage> {
 }
 
 function _genCodeAddForm(name: String, flutter: FlutterInfo, opts: GenPageOpts) {
+  const projectNameSnake = snakeCase(flutter.projectName);
   const nameSnake = snakeCase(name);
   const namePascal = pascalCase(name);
 
   return `
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}/${nameSnake}_bloc.dart';
+import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}/${nameSnake}_event.dart';
+import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}/${nameSnake}_state.dart';
+import 'package:${projectNameSnake}_mobile/models/${nameSnake}.dart';
 
-class ${namePascal}Page extends StatefulWidget {
-  ${namePascal}Page({Key key}) : super(key: key);
+class ${namePascal}AddPage extends StatefulWidget {
+  ${namePascal}AddPage({Key key}) : super(key: key);
 
   @override
-  State<${namePascal}Page> createState() => _${namePascal}State();
+  State<${namePascal}AddPage> createState() => _${namePascal}State();
 }
 
-class _${namePascal}State extends State<${namePascal}Page> {
+class _${namePascal}State extends State<${namePascal}AddPage> {
   final _nameController = TextEditingController();
 
   @override
@@ -179,7 +185,7 @@ class _${namePascal}State extends State<${namePascal}Page> {
     final bloc = BlocProvider.of<${namePascal}Bloc>(context);
 
     _onAddButtonPressed() {
-      bloc.dispatch(${namePascal}(_nameController.text));
+      bloc.dispatch(Create${namePascal}(_nameController.text));
     }
 
     return Scaffold(
@@ -211,6 +217,7 @@ class _${namePascal}State extends State<${namePascal}Page> {
                         TextFormField(
                           decoration:
                               InputDecoration(labelText: "${namePascal} name"),
+                          autofocus: true,
                           controller: _nameController,
                         ),
                         Row(
