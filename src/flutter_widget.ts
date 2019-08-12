@@ -216,6 +216,7 @@ class ${namePascal}ItemView extends StatelessWidget {
 
 function _genCodeList(name: String, flutter: FlutterInfo, opts: GenWidgetOpts) {
   const projectNameSnake = snakeCase(flutter.projectName);
+  const projectNamePascal = pascalCase(flutter.projectName);
   const nameSnake = snakeCase(name);
   const nameCamel = camelCase(name);
   const namePascal = pascalCase(name);
@@ -250,11 +251,11 @@ class ${namePascal}List extends StatelessWidget {
       return BlocBuilder<${namePascal}Bloc, ${namePascal}State>(
       builder: (context, state) {
           if (state is ${namePascal}ListLoading) {
-          return LoadingIndicator(key: RactaKeys.loading);
+          return LoadingIndicator(key: ${projectNamePascal}Keys.loading);
           } else if (state is ${namePascal}ListLoaded) {
           final List<${namePascal}> ${nameCamel}s = state.${nameCamel}s;
           return ListView.builder(
-              key: RactaKeys.${nameCamel}List,
+              key: ${projectNamePascal}Keys.${nameCamel}List,
               itemCount: ${nameCamel}s.length,
               itemBuilder: (BuildContext context, int index) {
               final item = ${nameCamel}s[index];
@@ -291,7 +292,7 @@ class _${namePascal}ListState extends State<${namePascal}List> {
     List<${namePascal}> ${nameCamel}s = [];
 
     return ListView.builder(
-      // key: RactaKeys.${nameCamel}List,
+      // key: ${projectNamePascal}Keys.${nameCamel}List,
       itemCount: ${nameCamel}s.length,
       itemBuilder: (BuildContext context, int index) {
         final item = ${nameCamel}s[index];
