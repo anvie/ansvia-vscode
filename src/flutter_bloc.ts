@@ -108,6 +108,7 @@ function generateEventCode(name: String | undefined, flutter: FlutterInfo, opts:
   var projectNameSnaake = snakeCase(flutter.projectName);
   var nameSnake = snakeCase(name);
   var namePascal = pascalCase(name);
+  var nameCamel = camelCase(name);
 
   var newLines = [];
 
@@ -135,6 +136,14 @@ class Create${namePascal} extends ${namePascal}Event {
   Create${namePascal}(this.id, this.text);
   @override
   String toString() => "Create${namePascal}";
+}
+
+/// Event to delete ${name}
+class Delete${namePascal} extends ${namePascal}Event {
+  final ${namePascal} ${nameCamel};
+  Delete${namePascal}(this.${nameCamel});
+  @override
+  String toString() => "Delete${namePascal}";
 }
   
 `);
@@ -194,7 +203,14 @@ class ${namePascal}Created extends ${namePascal}State {
   @override
   String toString() => "${namePascal}Created";
 }
-  
+
+/// State when ${name} already deleted
+class ${namePascal}Deleted extends ${namePascal}State {
+  final ${namePascal} ${nameCamel};
+  ${namePascal}Deleted(this.${nameCamel});
+  @override
+  String toString() => "${namePascal}Deleted";
+}
 `);
   return newLines.join('\n');
 }
