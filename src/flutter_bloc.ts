@@ -57,7 +57,7 @@ export async function generateBloc(opts: GenBlocOpts) {
   
 }
 
-export function doGenerate(name: String, flutter: FlutterInfo, opts: GenBlocOpts) {
+export async function doGenerate(name: String, flutter: FlutterInfo, opts: GenBlocOpts) {
   var libDir = `${flutter.projectDir}/lib`;
   var nameSnake = snakeCase(name);
 
@@ -90,7 +90,13 @@ export function doGenerate(name: String, flutter: FlutterInfo, opts: GenBlocOpts
       // Generate models
       const path = `${libDir}/models/${nameSnake}.dart`;
       if (!fs.existsSync(path)) {
-        fs.writeFileSync(path, generateModelCode(name, flutter, opts));
+        var fieldsStr = await window.showInputBox({
+          value: '',
+          valueSelection: [0, 11],
+          placeHolder: 'Model fields, eg: name:z,age:i,keywords:z[]'
+        }) || "";
+        fieldsStr = fieldsStr.split(',').map((a) => a.trim()).filter((a) => a.length > 0).join(',');
+        fs.writeFileSync(path, generateModelCode(name, fieldsStr, flutter, opts));
       }else{
         window.showWarningMessage(`Cannot generate model, model file ${path} already exists`);
       }
@@ -98,9 +104,9 @@ export function doGenerate(name: String, flutter: FlutterInfo, opts: GenBlocOpts
   }
 }
 
-function generateModelCode(name: String, flutter: FlutterInfo, opts: GenBlocOpts) {
+function generateModelCode(name: String, fieldsStr:String, flutter: FlutterInfo, opts: GenBlocOpts) {
   var modelOpts = new flutterModelGen.GenModelOpts();
-  modelOpts.fields = ["id:i"];
+  modelOpts.fields = fieldsStr.split(',');
   return flutterModelGen.genCode(name, flutter, modelOpts);
 }
 
