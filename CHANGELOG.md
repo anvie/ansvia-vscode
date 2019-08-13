@@ -4,6 +4,11 @@ All notable changes to the "ansvia-vscode" extension will be documented in this 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.1.6
+
+- Full BloC generator with layered repo.
+- List Widget generator with support of stateless and statefull options.
+
 ## 0.1.5
 
 - Improved: Flutter detail page generator.
