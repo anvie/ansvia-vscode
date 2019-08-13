@@ -243,6 +243,8 @@ class ${namePascal}Bloc extends Bloc<${namePascal}Event, ${namePascal}State> {
       yield* _mapLoad${namePascal}ToState(event);
     } else if (event is Create${namePascal}) {
       yield* _mapCreate${namePascal}ToState(event);
+    } else if (event is Delete${namePascal}) {
+      yield* _mapDeleteToState(event);
     }
     `);
   }
@@ -298,6 +300,24 @@ class ${namePascal}Bloc extends Bloc<${namePascal}Event, ${namePascal}State> {
     }
   }
 `);
+
+    newLines.push(`
+  Stream<${namePascal}State> _mapDeleteToState(Delete${namePascal} event) async* {
+    yield ${namePascal}Loading();
+
+    final data =
+        await PublicApi.post("/${nameSnake}/v1/delete", {"id": event.${nameCamel}.id});
+
+    if (data != null) {
+      await repo.deleteEntriesItem("entries", event.${nameCamel}.toMap());
+
+      yield ${namePascal}Deleted(event.${nameCamel});
+      dispatch(Load${namePascal}(force: false));
+    } else {
+      yield ${namePascal}Failure(error: "Cannot delete ${name}");
+    }
+  }
+    `);
   }
   newLines.push('}');
 
