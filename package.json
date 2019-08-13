@@ -4,7 +4,7 @@
     "description": "Ansvia VSCode plugin as helper for developers",
     "publisher": "Ansvia",
     "repository": "https://github.com/anvie/ansvia-vscode",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "engines": {
         "vscode": "^1.36.0"
     },

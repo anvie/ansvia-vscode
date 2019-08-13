@@ -104,26 +104,5 @@ PopupMenuButton<Choice>(
   newLines.push('  }');
   newLines.push(')');
 
-//   const code = `
-// PopupMenuButton<Choice>(
-//   onSelected: (Choice choice){
-//     print("selected: \${choice.title}");
-//     if (choice.title == "Step Manager"){
-//       Navigator.of(context).pushNamed("/stepman");
-//     }else if (choice.title == "Edit"){
-//       setState(() {
-//           _editMode = !_editMode;
-//       });
-//     }
-//   },
-//   itemBuilder: (BuildContext build){
-//     return [
-//       PopupMenuItem(key: RactaKeys.editProjects, value: Choice("Edit", Icons.edit),child: Text("Edit"),),
-//       PopupMenuItem(value: Choice("Step Manager", Icons.format_list_numbered), child: Text("Step Manager"))
-//     ];
-//   },
-// )
-//   `;
-  
   return newLines.join("\n");
 }

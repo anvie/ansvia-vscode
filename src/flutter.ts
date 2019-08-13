@@ -8,7 +8,7 @@ import { generateWidget, GenWidgetOpts, WidgetKind } from './flutter_widget';
 import { generateModel, GenModelOpts } from './flutter_model';
 import { generateFragment, GenFragmentOpts, FragmentKind } from './flutter_fragment';
 import { generateButton, GenButtonOpts, ButtonKind } from './flutter_button';
-
+import * as flutterBloc from './flutter_bloc';
 
 var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
@@ -26,8 +26,9 @@ export function setup(context: ExtensionContext) {
     const quickPick = window.createQuickPick();
     quickPick.items = [
       new Cmd("Generate new CRUD flow", () => generateFlutter({ statefulScreenPage: true })),
-      new Cmd("Generate List Widget (bloc mode)", () => generateWidget(new GenWidgetOpts(true, WidgetKind.List))),
-      new Cmd("Generate List Widget (non bloc mode)", () => generateWidget(new GenWidgetOpts(false, WidgetKind.List))),
+      new Cmd("Generate List Widget W1 (bloc mode, stateless)", () => generateWidget(new GenWidgetOpts(true, WidgetKind.List))),
+      new Cmd("Generate List Widget W2 (bloc mode, stateful)", () => generateWidget(new GenWidgetOpts(true, WidgetKind.List, false, true))),
+      new Cmd("Generate List Widget W3 (non bloc mode)", () => generateWidget(new GenWidgetOpts(false, WidgetKind.List))),
       new Cmd("Generate List Item Widget", () => generateWidget(new GenWidgetOpts(false, WidgetKind.ListItem))),
       new Cmd("Generate Detail Field Widget", () => generateWidget(new GenWidgetOpts(false, WidgetKind.DetailField, true))),
       new Cmd("Generate Model", () => generateModel(new GenModelOpts())),
@@ -37,6 +38,11 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate Form Add Page", () => generatePage(new GenPageOpts(PageKind.FormAdd))),
       new Cmd("Generate Autocompletable form field", () => generateFragment(new GenFragmentOpts(FragmentKind.FormAutocompleteField))),
       new Cmd("Generate Popup Menu Button", () => generateButton(new GenButtonOpts(ButtonKind.PopupMenu))),
+      new Cmd("Generate BloC (+event, +state, +CRUD, +model)", () => flutterBloc.generateBloc(new flutterBloc.GenBlocOpts(flutterBloc.BlocKind.CRUDMethods, true, true, true, true, false))),
+      new Cmd("Generate BloC (+event, +state, +CRUD, -model)", () => flutterBloc.generateBloc(new flutterBloc.GenBlocOpts(flutterBloc.BlocKind.CRUDMethods, true, true, true, false, false))),
+      new Cmd("Generate BloC with LayeredRepo BLOC1 (+event, +state, +CRUD)", () => flutterBloc.generateBloc(new flutterBloc.GenBlocOpts(flutterBloc.BlocKind.CRUDMethods, true, true, true, false, true))),
+      new Cmd("Generate BloC with LayeredRepo BLOC2 (+event, +state, +CRUD, +model)", () => flutterBloc.generateBloc(new flutterBloc.GenBlocOpts(flutterBloc.BlocKind.CRUDMethods, true, true, true, true, true))),
+      new Cmd("Generate BloC with LayeredRepo BLOC3 (+event, +state, +CRUD, -model)", () => flutterBloc.generateBloc(new flutterBloc.GenBlocOpts(flutterBloc.BlocKind.CRUDMethods, true, true, true, false, true))),
     ];
     quickPick.onDidChangeSelection(selection => {
       if (selection[0]) {

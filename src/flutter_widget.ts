@@ -21,10 +21,12 @@ export class GenWidgetOpts {
   bloc: boolean;
   kind: WidgetKind;
   oneStep: boolean;
-  constructor(bloc: boolean, kind: WidgetKind, oneStep: boolean = false) {
+  stateful: boolean;
+  constructor(bloc: boolean, kind: WidgetKind, oneStep: boolean = false, stateful: boolean = false) {
     this.bloc = bloc;
     this.kind = kind;
     this.oneStep = oneStep;
+    this.stateful = stateful;
   }
 }
 
@@ -41,6 +43,11 @@ export async function generateWidget(opts: GenWidgetOpts) {
     valueSelection: [0, 11],
     placeHolder: 'Widget list item name, eg: Todo'
   }) || "";
+
+  if (name === "") {
+    window.showInformationMessage("No name");
+    return;
+  }
 
   var libDir = `${flutter.projectDir}/lib`;
   var widgetDir = `${libDir}/widgets`;
@@ -240,18 +247,67 @@ import 'package:${projectNameSnake}_mobile/widgets/${nameSnake}/${nameSnake}_ite
 
   if (opts.bloc) {
 
-    newLines.push(`
+    if (opts.stateful) {
+      newLines.push(`
+/// List widget for ${namePascal}
+class ${namePascal}List extends StatefulWidget {
+  final BuildContext context;
+  ${namePascal}List(this.context, {Key key}) : super(key: key);
+
+  _${namePascal}ListState createState() => _${namePascal}ListState(context);
+}
+
+class _${namePascal}ListState extends State<${namePascal}List> {
+  List<${namePascal}> ${nameCamel}s;
+
+  _${namePascal}ListState(BuildContext context) {
+    ${nameCamel}s = [];  
+  }
+`);
+
+    }else{
+      newLines.push(`
 /// List widget for ${name}
 class ${namePascal}List extends StatelessWidget {
 
   ${namePascal}List(BuildContext context) {}
 
+`);
+    }
+
+    if (opts.stateful){
+      newLines.push(`
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<${namePascal}Bloc, ${namePascal}State>(
+      builder: (context, state) {
+        if (state is ${namePascal}ListLoading) {
+          if (${nameCamel}s.length == 0){
+          return LoadingIndicator(key: ${projectNamePascal}Keys.loading);
+          }
+        } else if (state is ${namePascal}ListLoaded) {
+          ${nameCamel}s = state.${nameCamel}s;
+        }
+        return ListView.builder(
+          key: ${projectNamePascal}Keys.${nameCamel}List,
+          itemCount: ${nameCamel}s.length,
+          itemBuilder: (BuildContext context, int index) {
+            final item = ${nameCamel}s[index];
+            return new ${namePascal}ItemView(item: item);
+          });
+        }
+    );
+  }
+}
+      `);
+    }else{
+      newLines.push(`
   @override
   Widget build(BuildContext context) {
       return BlocBuilder<${namePascal}Bloc, ${namePascal}State>(
       builder: (context, state) {
           if (state is ${namePascal}ListLoading) {
-          return LoadingIndicator(key: ${projectNamePascal}Keys.loading);
+            return LoadingIndicator(key: ${projectNamePascal}Keys.loading);
           } else if (state is ${namePascal}ListLoaded) {
           final List<${namePascal}> ${nameCamel}s = state.${nameCamel}s;
           return ListView.builder(
@@ -269,7 +325,9 @@ class ${namePascal}List extends StatelessWidget {
       );
   }
 }
-  `);
+      `);
+    }
+
   }
   else {
     newLines.push(`
