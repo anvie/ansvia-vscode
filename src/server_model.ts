@@ -60,7 +60,7 @@ export async function generateModel(opts: ServerOpts) {
         value: '',
         placeHolder: 'Fields, eg: id:id,name:z,active:b,timestamp:dt,num:i,num:i64,keywords:z[]'
       }) || "";
-      let fields = fieldsStr.split(',').map((a) => a.trim());
+      let fields = fieldsStr.split(',').map((a) => a.trim()).filter((a) => a.length > 0);
       editor.edit(builder => {
         let result = generateDaoCode(name, fields, opts, builder);
         builder.replace(editor.selection.anchor, result);
@@ -175,14 +175,13 @@ impl<'a> ${namePascal}Dao<'a> {
   newLines.push(`
     diesel::insert_into(${nameSnake}s::table)
         .values(&New${namePascal} {
-  `);
+`);
 
   for (let fld of newFields){
     newLines.push(`            ${fld[0]},`);
   }
 
-  newLines.push(`
-        })
+  newLines.push(`        })
         .get_result(self.db)
         .map_err(From::from)
   }
