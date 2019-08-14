@@ -12,17 +12,12 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:extension.ansbloc",
         "onCommand:extension.flutter",
         "onCommand:extension.mainframe"
     ],
     "main": "./out/extension.js",
     "contributes": {
         "commands": [
-            {
-                "command": "extension.ansbloc",
-                "title": "ANSVIA: BloC Generator"
-            },
             {
                 "command": "extension.flutter",
                 "title": "ANSVIA: Generate Flutter Code"
