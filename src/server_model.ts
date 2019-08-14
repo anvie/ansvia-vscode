@@ -1,5 +1,5 @@
 import { getRootDir, ProjectType } from "./util";
-import { window, ExtensionContext, commands, TextEditorEdit } from "vscode";
+import { window, ExtensionContext, commands, TextEditorEdit, Position } from "vscode";
 import { fstat } from "fs";
 import { Cmd } from "./cmd";
 
@@ -10,7 +10,8 @@ const fs = require('fs');
 
 export enum ServerKind {
   Model,
-  Dao
+  Dao,
+  ModelToApiType
 }
 
 export class ServerOpts {
@@ -19,7 +20,6 @@ export class ServerOpts {
     this.kind = kind;
   }
 }
-
 
 export async function generateModel(opts: ServerOpts) {
   const rootDir = getRootDir(ProjectType.Server);
@@ -30,14 +30,18 @@ export async function generateModel(opts: ServerOpts) {
 
   console.log("rootDir: " + rootDir);
 
-  const name = await window.showInputBox({
-    value: '',
-    placeHolder: 'Service name, example: Account'
-  }) || "";
+  var name = "";
 
-  if (name.length === 0) {
-    window.showInformationMessage("No name");
-    return;
+  if (opts.kind !== ServerKind.ModelToApiType){
+    name = await window.showInputBox({
+      value: '',
+      placeHolder: 'Service name, example: Account'
+    }) || "";
+
+    if (name.length === 0) {
+      window.showInformationMessage("No name");
+      return;
+    }
   }
 
   const editor = window.activeTextEditor!;
@@ -67,11 +71,73 @@ export async function generateModel(opts: ServerOpts) {
       });
       break;
     }
+    case ServerKind.ModelToApiType: {
+      editor.edit(builder => {
+        let result = generateModelToApiConverter(opts, builder);
+        let nextPos = editor.selection.end.line + 1;
+        builder.replace(new Position(nextPos, 0), '\n' + result + '\n');
+      });
+      break;
+    }
   }
 }
 
-function generateDaoCode(name: String, fields: String[], opts: ServerOpts, builder: TextEditorEdit) {
+function generateModelToApiConverter(opts: ServerOpts, builder: TextEditorEdit): string {
   const editor = window.activeTextEditor!;
+
+  const text = editor.document.getText(editor.selection);
+  console.log("selected text: " + text);
+
+  const reName = new RegExp("pub struct (\\w*) {");
+  const reField = new RegExp("pub (\\w*): *(\\w*),?");
+
+  var name = "";
+
+  let lines = text.split('\n');
+  let newLines = [];
+  let fields = [];
+
+  for (let line of lines){
+    var s = reName.exec(line);
+    if (s && s[1]){
+      if (name !== ""){
+        window.showWarningMessage("Name already defined: " + name);
+        return "";
+      }
+      name = s[1].trim();
+      const namePascal = pascalCase(name);
+      newLines.push(`impl ToApiType<${namePascal}> for models::${namePascal} {`);
+      newLines.push(`    fn to_api_type(&self, conn: &PgConnection) -> ${namePascal} {`);
+      newLines.push(`        ${namePascal} {`);
+      continue;
+    }
+    if (name.length > 0){
+      s = reField.exec(line);
+      if (s === null){
+        continue;
+      }
+      console.log("s: " + s);
+      console.log("s[2]: " + s[2]);
+      if (s[1]){
+        if (s[2].trim() === "String"){
+          newLines.push(`            ${s[1]}: self.${s[1]}.to_owned(),`);
+        }else if (s[2].startsWith("Vec")){
+          newLines.push(`            ${s[1]}: self.${s[1]}.clone(),`);
+        }else{
+          newLines.push(`            ${s[1]}: self.${s[1]},`);
+        }
+      }
+    }
+  }
+  newLines.push('        }');
+  newLines.push('    }');
+  newLines.push('}');
+
+  return newLines.join('\n');
+}
+
+function generateDaoCode(name: String, fields: String[], opts: ServerOpts, builder: TextEditorEdit) {
+  // const editor = window.activeTextEditor!;
   const namePascal = pascalCase(name);
   const nameSnake = snakeCase(name);
 
@@ -165,8 +231,8 @@ impl<'a> ${namePascal}Dao<'a> {
   /// Create new ${namePascal}
   pub fn create(&self,
 `.trim());
-  
-  for (let fld of newFields){
+
+  for (let fld of newFields) {
     newLines.push(`      ${fld[0]}: ${fld[1]},`);
   }
   newLines.push(`    ) -> Result<${namePascal}> {`);
@@ -177,7 +243,7 @@ impl<'a> ${namePascal}Dao<'a> {
         .values(&New${namePascal} {
 `);
 
-  for (let fld of newFields){
+  for (let fld of newFields) {
     newLines.push(`            ${fld[0]},`);
   }
 

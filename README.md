@@ -4,21 +4,25 @@ Ansvia VSCode extension, to simplify programmer's life.
 
 ## Features
 
-* Generate BloC code in instant.
-* Generate Flutter CRUD UI complete flow.
-* Generate Flutter model.
-* Generate Flutter model add fields.
-* Generate Flutter list widget (bloc/non bloc/stateless/statefull).
-* Generate Flutter list item widget.
-* Generate Flutter detail field widget.
-* Generate Flutter basic page.
-* Generate Flutter detail page.
-* Generate Flutter form add page.
-* Generate Flutter form autocomplete field.
-* Generate Flutter Popup Menu Button.
-* Generate Mainframe service & API code.
-* Generate Mainframe data model.
-* Generate Mainframe model's DAO.
+### Flutter
+* BloC code generator.
+* Flutter CRUD UI complete flow.
+* Flutter model.
+* Flutter model add fields.
+* Flutter list widget (bloc/non bloc/stateless/statefull).
+* Flutter list item widget.
+* Flutter detail field widget.
+* Flutter basic page.
+* Flutter detail page.
+* Flutter form add page.
+* Flutter form autocomplete field.
+* Flutter Popup Menu Button.
+
+### Server
+* Server service & API code generator.
+* Server data model generator.
+* Server db model type to API type converter.
+* Server model's DAO generator.
 
 ## Build
 

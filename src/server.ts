@@ -10,76 +10,81 @@ const fs = require('fs');
 
 
 export interface ServiceOpts {
-    name: String;
+  name: String;
 }
 
 
 export function setup(context: ExtensionContext) {
-    context.subscriptions.push(commands.registerCommand('extension.mainframe', async () => {
-        const quickPick = window.createQuickPick();
-        quickPick.items = [
-            new Cmd("Generate basic CRUD Service +API", () => generateCode({ name: '' })),
-            new Cmd("Generate model", () => generateModel(new ServerOpts(ServerKind.Model))),
-            new Cmd("Generate DAO", () => generateModel(new ServerOpts(ServerKind.Dao))),
-            // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
-        ];
-        quickPick.onDidChangeSelection(selection => {
-            if (selection[0]) {
-                (selection[0] as Cmd).code_action(context).catch(console.error);
-            }
-        });
-        quickPick.onDidHide(() => quickPick.dispose());
-        quickPick.show();
-    }));
+  context.subscriptions.push(commands.registerCommand('extension.mainframe', async () => {
+    const quickPick = window.createQuickPick();
+    quickPick.items = [
+      new Cmd("Generate basic CRUD Service +API", () => generateCode({ name: '' })),
+      new Cmd("Generate model", () => generateModel(new ServerOpts(ServerKind.Model))),
+      new Cmd("Generate DAO", () => generateModel(new ServerOpts(ServerKind.Dao))),
+      new Cmd("Generate Model to API type", () => generateModel(new ServerOpts(ServerKind.ModelToApiType))),
+      // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
+    ];
+    quickPick.onDidChangeSelection(selection => {
+      if (selection[0]) {
+        (selection[0] as Cmd).code_action(context).catch(console.error)
+          .then((result) => {
+            console.log(result);
+            quickPick.dispose();
+          });
+      }
+    });
+    quickPick.onDidHide(() => quickPick.dispose());
+    quickPick.show();
+  }));
 }
 
 
 async function generateCode(opts: ServiceOpts) {
-    const rootDir = getRootDir(ProjectType.Server);
+  const rootDir = getRootDir(ProjectType.Server);
 
-    if (!rootDir) {
-        return;
-    }
+  if (!rootDir) {
+    return;
+  }
 
-    console.log("rootDir: " + rootDir);
+  console.log("rootDir: " + rootDir);
 
-    const name = await window.showInputBox({
-        value: '',
-        placeHolder: 'Service name, example: Account'
-    }) || "";
+  const name = await window.showInputBox({
+    value: '',
+    placeHolder: 'Service name, example: Account'
+  }) || "";
 
-    if (name.length === 0) {
-        window.showInformationMessage("No name");
-        return;
-    }
+  if (name.length === 0) {
+    window.showInformationMessage("No name");
+    return;
+  }
 
-    const path = `${rootDir}/src/api`;
+  const path = `${rootDir}/src/api`;
 
-    if (!fs.existsSync(path)) {
-        window.showWarningMessage(`Path not exists: ${path}`);
-        return;
-    }
+  if (!fs.existsSync(path)) {
+    window.showWarningMessage(`Path not exists: ${path}`);
+    return;
+  }
 
-    opts.name = name;
+  opts.name = name;
 
-    generateApiCode(path, opts);
-    generateServiceCode(`${rootDir}/src/service`, opts);
+  generateApiCode(path, opts);
+  generateServiceCode(`${rootDir}/src/service`, opts);
 }
 
 function generateServiceCode(baseDir: String, opts: ServiceOpts) {
-    const namePascal = pascalCase(opts.name);
-    const nameSnake = snakeCase(opts.name);
+  const namePascal = pascalCase(opts.name);
+  const nameSnake = snakeCase(opts.name);
 
-    const newCode = `impl_service!(${namePascal}Service, ${nameSnake});`;
+  const newCode = `impl_service!(${namePascal}Service, ${nameSnake});`;
 
-    fs.appendFileSync(`${baseDir}/services.rs`, newCode);
+  fs.appendFileSync(`${baseDir}/services.rs`, newCode);
 }
 
 function generateApiCode(path: String, opts: ServiceOpts) {
-    const namePascal = pascalCase(opts.name);
-    const nameSnake = snakeCase(opts.name);
+  const namePascal = pascalCase(opts.name);
+  const nameSnake = snakeCase(opts.name);
 
-    const newCode = `
+  const newCode = `
 //! Koleksi query yang digunakan untuk operasi pada rest API ${namePascal}
 #![allow(missing_docs)]
 
@@ -180,30 +185,30 @@ pub struct PrivateApi;
 #[api_group("${namePascal}", "private", base = "/${nameSnake}/v1")]
 impl PrivateApi {}
 `;
-    fs.writeFileSync(`${path}/${nameSnake}.rs`, newCode);
+  fs.writeFileSync(`${path}/${nameSnake}.rs`, newCode);
 
-    // add pub mod into mod.rs file
-    {
-        const modFile = `${path}/mod.rs`;
-        const modData = fs.readFileSync(modFile).toString();
+  // add pub mod into mod.rs file
+  {
+    const modFile = `${path}/mod.rs`;
+    const modData = fs.readFileSync(modFile).toString();
 
-        var lines = modData.split(/\r?\n/);
-        var newLines = [];
-        var foundPubMod = false;
-        var alreadyInserted = false;
+    var lines = modData.split(/\r?\n/);
+    var newLines = [];
+    var foundPubMod = false;
+    var alreadyInserted = false;
 
-        for (let [i, line] of lines.entries()) {
-            if (!alreadyInserted) {
-                if (line.trim().startsWith("pub mod")) {
-                    foundPubMod = true;
-                } else if (foundPubMod) {
-                    newLines.push(`pub mod ${nameSnake};`);
-                    alreadyInserted = true;
-                }
-            }
-            newLines.push(line);
+    for (let [i, line] of lines.entries()) {
+      if (!alreadyInserted) {
+        if (line.trim().startsWith("pub mod")) {
+          foundPubMod = true;
+        } else if (foundPubMod) {
+          newLines.push(`pub mod ${nameSnake};`);
+          alreadyInserted = true;
         }
-
-        fs.writeFileSync(modFile, newLines.join('\n'));
+      }
+      newLines.push(line);
     }
+
+    fs.writeFileSync(modFile, newLines.join('\n'));
+  }
 }
