@@ -75,7 +75,7 @@ function generateServiceCode(baseDir: String, opts: ServiceOpts) {
   const namePascal = pascalCase(opts.name);
   const nameSnake = snakeCase(opts.name);
 
-  const newCode = `impl_service!(${namePascal}Service, ${nameSnake});`;
+  const newCode = `impl_service!(${namePascal}Service, ${nameSnake});\n`;
 
   fs.appendFileSync(`${baseDir}/services.rs`, newCode);
 }

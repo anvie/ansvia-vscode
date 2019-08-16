@@ -4,6 +4,11 @@ All notable changes to the "ansvia-vscode" extension will be documented in this 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.1.9
+
+- Add Flutter model generator from SQL definition.
+- Some minor fixes when generating service implementation macro.
+
 ## 0.1.8
 
 - Add code generator for DB model to API type converter.

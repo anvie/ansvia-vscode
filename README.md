@@ -9,6 +9,7 @@ Ansvia VSCode extension, to simplify programmer's life.
 * Flutter CRUD UI complete flow.
 * Flutter model.
 * Flutter model add fields.
+* Generate Flutter model from SQL definition.
 * Flutter list widget (bloc/non bloc/stateless/statefull).
 * Flutter list item widget.
 * Flutter detail field widget.
