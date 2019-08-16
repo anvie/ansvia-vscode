@@ -238,15 +238,15 @@ import 'package:${projectNameSnake}_mobile/models/${nameSnake}.dart';
   `;
 
   if (opts.withLayeredRepo){
-    newLines.push(`import 'package:${projectNameSnake}_mobile/core/layered_repo.dart';`);
+    newLines.push(`import 'package:${projectNameSnake}_mobile/core/smart_repo.dart';`);
   }
 
   const classHeadStr = `
 class ${namePascal}Bloc extends Bloc<${namePascal}Event, ${namePascal}State> {
-  PersistentLayeredRepo repo;
+  PersistentSmartRepo repo;
 
   ${namePascal}Bloc() {
-    repo = PersistentLayeredRepo("bloc_${nameCamel}");
+    repo = PersistentSmartRepo("bloc_${nameSnake}");
   }
 
   @override
