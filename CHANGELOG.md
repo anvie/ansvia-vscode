@@ -1,9 +1,5 @@
 # Change Log
 
-All notable changes to the "ansvia-vscode" extension will be documented in this file.
-
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
 ## 0.2.0
 
 - Added Flutter "edit page" code generator.
