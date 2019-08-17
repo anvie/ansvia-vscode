@@ -37,6 +37,7 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate Basic Page", () => generatePage(new GenPageOpts(PageKind.Basic))),
       new Cmd("Generate Detail Page", () => generatePage(new GenPageOpts(PageKind.Detail))),
       new Cmd("Generate Form Add Page", () => generatePage(new GenPageOpts(PageKind.FormAdd))),
+      new Cmd("Generate Form Edit Page", () => generatePage(new GenPageOpts(PageKind.FormUpdate))),
       new Cmd("Generate Autocompletable form field", () => generateFragment(new GenFragmentOpts(FragmentKind.FormAutocompleteField))),
       new Cmd("Generate Popup Menu Button", () => generateButton(new GenButtonOpts(ButtonKind.PopupMenu))),
       new Cmd("Generate BloC (+event, +state, +CRUD, +model)", () => flutterBloc.generateBloc(new flutterBloc.GenBlocOpts(flutterBloc.BlocKind.CRUDMethods, true, true, true, true, false))),

@@ -189,8 +189,8 @@ class ${namePascal}ListLoading extends ${namePascal}State {
 }
 
 class ${namePascal}ListLoaded extends ${namePascal}State {
-  final List<${namePascal}> ${nameCamel}s;
-  ${namePascal}ListLoaded(this.${nameCamel}s);
+  final List<${namePascal}> items;
+  ${namePascal}ListLoaded(this.items);
   @override
   String toString() => "${namePascal}ListLoaded";
 }

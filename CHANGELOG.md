@@ -4,6 +4,12 @@ All notable changes to the "ansvia-vscode" extension will be documented in this 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.2.0
+
+- Added Flutter "edit page" code generator.
+- Added Server DAO new file (non inline) code generator.
+- Added Server model generator from SQL definition.
+
 ## 0.1.9
 
 - Add Flutter model generator from SQL definition.

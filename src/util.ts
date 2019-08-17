@@ -1,5 +1,5 @@
 
-import { window, workspace } from "vscode";
+import { window, workspace, Uri, commands, WorkspaceEdit, TextEdit } from "vscode";
 
 const fs = require("fs");
 var yaml = require('js-yaml');
@@ -73,4 +73,50 @@ export function getFlutterInfo(): FlutterInfo | null {
   }
 
   return new FlutterInfo(project, projectName, rootDir);
+}
+
+
+export function openFile(filePath: string) {
+  var fileUri = Uri.file(filePath);
+  workspace.openTextDocument(fileUri).then(doc => {
+    window.showTextDocument(doc);
+  });
+}
+
+export function openAndFormatFile(filePath: string) {
+  var fileUri = Uri.file(filePath);
+  workspace.openTextDocument(fileUri).then(doc => {
+    window.showTextDocument(doc);
+    reformatDocument(fileUri);
+  });
+}
+
+export function reformatDocument(fileUri: Uri) {
+  commands.executeCommand("vscode.executeFormatDocumentProvider", fileUri,
+    { tabSize: 2, insertSpaces: true, insertFinalNewline: true })
+    .then((edits) => {
+      if (edits !== undefined) {
+        let formatEdit = new WorkspaceEdit();
+        formatEdit.set(fileUri, edits as TextEdit[]);
+        workspace.applyEdit(formatEdit);
+        workspace.saveAll();
+      }
+    },
+      (error) => console.error(error));
+}
+
+export function normalizeName(name: string): string {
+  if (name.endsWith('ies')) {
+    return name.substring(0, name.length - 3) + 'y';
+  } else {
+    return name;
+  }
+}
+
+export function nameToPlural(name: string): string {
+  if (name.endsWith('y')) {
+    return name.substring(0, name.length - 1) + 'ies';
+  } else {
+    return name + 's';
+  }
 }

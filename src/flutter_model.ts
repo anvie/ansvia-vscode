@@ -1,10 +1,6 @@
 
-import { window, workspace, ExtensionContext, commands, Uri, WorkspaceEdit, TextEdit } from 'vscode';
-import { getRootDir, ProjectType, getFlutterInfo, FlutterInfo } from './util';
-import { doGenerateBlocCode, BlocOpts } from './bloc';
-import { Cmd } from './cmd';
-import { openAndFormatFile } from './flutter_util';
-import { print } from 'util';
+import { window } from 'vscode';
+import { getFlutterInfo, FlutterInfo, openAndFormatFile } from './util';
 
 var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
@@ -128,7 +124,6 @@ export async function generateModelFromSQLDef(opts: GenModelOpts){
       continue;
     }
 
-    const fieldCamel = camelCase(field);
 
     switch (sqlTy) {
       case "bigserial":
@@ -192,7 +187,6 @@ export async function generateModelFromSQLDef(opts: GenModelOpts){
 
   var opts = new GenModelOpts();
   opts.fields = fields;
-  const generatedCode = genCode(name, flutter, opts);
 
   var libDir = `${flutter.projectDir}/lib`;
   var modelDir = `${libDir}/models`;
@@ -208,8 +202,6 @@ export async function generateModelFromSQLDef(opts: GenModelOpts){
 }
 
 export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) {
-  const projectNameSnake = snakeCase(flutter.projectName);
-  const nameSnake = snakeCase(name);
   const namePascal = pascalCase(name);
 
   var fields = [];
@@ -219,7 +211,6 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
   var toMaps = [];
   var copiesParams = [];
   var copiesAssigns = [];
-  var newFields = [];
 
   for (let _field of opts.fields) {
     var newFieldName = _field.trim();

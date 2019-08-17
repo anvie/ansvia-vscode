@@ -14,7 +14,8 @@ var fs = require('fs');
 export enum PageKind {
   Basic,
   Detail,
-  FormAdd
+  FormAdd,
+  FormUpdate
 }
 
 export class GenPageOpts {
@@ -65,6 +66,9 @@ export async function generatePage(opts: GenPageOpts) {
     case PageKind.FormAdd:
       pageFilePath = `${screenDir}/${pageNameDir}/${nameSnake}_add_page.dart`;
       break;
+    case PageKind.FormUpdate:
+      pageFilePath = `${screenDir}/${pageNameDir}/${nameSnake}_edit_page.dart`;
+      break;
   }
 
   // var pageFile = `${screenDir}/${nameSnake}/${nameSnake}_page.dart`;
@@ -82,6 +86,9 @@ export async function generatePage(opts: GenPageOpts) {
         break;
       case PageKind.FormAdd:
         fs.writeFileSync(pageFilePath, await _genCodeAddForm(name, flutter, opts));
+        break;
+      case PageKind.FormUpdate:
+        fs.writeFileSync(pageFilePath, await _genCodeUpdateForm(name, flutter, opts));
         break;
     }
     openAndFormatFile(pageFilePath);
@@ -240,6 +247,124 @@ class _${namePascal}State extends State<${namePascal}AddPage> {
     );
   }
 }
+  `;
+}
+
+
+function _genCodeUpdateForm(name: String, flutter: FlutterInfo, opts: GenPageOpts) {
+  const projectNameSnake = snakeCase(flutter.projectName);
+  const nameSnake = snakeCase(name);
+  const namePascal = pascalCase(name);
+  const nameCamel = camelCase(name);
+
+  return `
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}/${nameSnake}_bloc.dart';
+import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}/${nameSnake}_event.dart';
+import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}/${nameSnake}_state.dart';
+import 'package:${projectNameSnake}_mobile/util/error_util.dart';
+
+class ${namePascal}EditPage extends StatefulWidget {
+  final ${namePascal}Bloc ${nameCamel}Bloc;
+
+  ${namePascal}EditPage(this.${nameCamel}Bloc, {Key key}) : super(key: key);
+
+  @override
+  State<${namePascal}EditPage> createState() =>
+      _${namePascal}EditState(${nameCamel}Bloc);
+}
+
+class _${namePascal}EditState extends State<${namePascal}EditPage> {
+  final _field1Controller = TextEditingController();
+  final _field2Controller = TextEditingController();
+  final _field3Controller = TextEditingController();
+  final ${namePascal}Bloc ${nameCamel}Bloc;
+  bool _inProgress = false;
+  StreamSubscription subs;
+  BuildContext _context;
+
+  _${namePascal}EditState(this.${nameCamel}Bloc) {
+    subs = ${nameCamel}Bloc.state.listen((${namePascal}EditState state) {
+      if (state is ${namePascal}Updated) {
+        Navigator.pop(_context, true);
+      } else if (state is ${namePascal}Failure) {
+        Scaffold.of(_context).showSnackBar(
+          SnackBar(
+            content: Text(state.error),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    subs.cancel();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    disableApiErrorHandler();
+
+    _onUpdateButtonPressed() {
+      ${nameCamel}Bloc.dispatch(Update${namePascal}(_field1Controller.text,
+          _field2Controller.text, _field3Controller.text));
+    }
+
+    return Scaffold(
+        appBar: AppBar(title: Text("Update ${name}")),
+        body: Builder(
+          builder: (context) {
+            _context = context;
+            return Center(
+              child: ListView(
+                children: <Widget>[
+                  Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Form(
+                          child: Column(
+                        children: <Widget>[
+                          TextFormField(
+                            decoration:
+                                InputDecoration(labelText: "Field 1:"),
+                            autofocus: true,
+                            controller: _field1Controller,
+                          ),
+                          TextFormField(
+                            decoration:
+                                InputDecoration(labelText: "Field 2:"),
+                            controller: _field2Controller,
+                          ),
+                          TextFormField(
+                            decoration: InputDecoration(
+                                labelText: "Field 3:"),
+                            controller: _field3Controller,
+                          ),
+                          Row(
+                            children: <Widget>[
+                              RaisedButton(
+                                onPressed: !_inProgress
+                                    ? _onUpdateButtonPressed
+                                    : null,
+                                child: Text("UPDATE"),
+                              )
+                            ],
+                          )
+                        ],
+                      ))),
+                ],
+              ),
+            );
+          },
+        ));
+  }
+}
+  
+  
   `;
 }
 

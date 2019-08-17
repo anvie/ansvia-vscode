@@ -16,12 +16,14 @@ Ansvia VSCode extension, to simplify programmer's life.
 * Flutter basic page.
 * Flutter detail page.
 * Flutter form add page.
+* Flutter form edit page.
 * Flutter form autocomplete field.
 * Flutter Popup Menu Button.
 
 ### Server
 * Server service & API code generator.
 * Server data model generator.
+* Server data model generator from SQL definition.
 * Server db model type to API type converter.
 * Server model's DAO generator.
 

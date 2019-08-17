@@ -1,7 +1,7 @@
 import { getRootDir, ProjectType } from "./util";
 import { window, ExtensionContext, commands } from "vscode";
 import { Cmd } from "./cmd";
-import { generateModel, ServerOpts, ServerKind } from "./server_model";
+import { generateModel, ServerOpts, ServerKind, generateModelFromSQLDef } from "./server_model";
 
 const snakeCase = require('snake-case');
 const camelCase = require('camel-case');
@@ -20,8 +20,10 @@ export function setup(context: ExtensionContext) {
     quickPick.items = [
       new Cmd("Generate basic CRUD Service +API", () => generateCode({ name: '' })),
       new Cmd("Generate model", () => generateModel(new ServerOpts(ServerKind.Model))),
-      new Cmd("Generate DAO", () => generateModel(new ServerOpts(ServerKind.Dao))),
+      new Cmd("Generate DAO inline", () => generateModel(new ServerOpts(ServerKind.DaoInline))),
+      new Cmd("Generate DAO new file", () => generateModel(new ServerOpts(ServerKind.DaoNewFile))),
       new Cmd("Generate Model to API type", () => generateModel(new ServerOpts(ServerKind.ModelToApiType))),
+      new Cmd("Generate Model from SQL definition", () => generateModelFromSQLDef(new ServerOpts(ServerKind.Model))),
       // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
     ];
     quickPick.onDidChangeSelection(selection => {
@@ -97,7 +99,7 @@ use serde_json::Value as JsonValue;
 use crate::{
     api,
     api::types::*,
-    api::{ApiResult, Error as ApiError, HttpRequest as ApiHttpRequest},
+    api::{ApiResult, Error as ApiError, HttpRequest as ApiHttpRequest, error::param_error},
     auth,
     dao::${namePascal}Dao,
     error::{Error, ErrorCode},
