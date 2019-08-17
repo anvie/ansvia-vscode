@@ -1,7 +1,6 @@
 
 import { window, Selection, Position, Range, TextEditorEdit, WorkspaceEdit, TextEdit, Uri, workspace } from 'vscode';
-import { getFlutterInfo, FlutterInfo } from './util';
-import { openAndFormatFile, reformatDocument } from './flutter_util';
+import { getFlutterInfo, FlutterInfo, reformatDocument } from './util';
 import * as flutter_model from './flutter_model';
 import { print } from 'util';
 

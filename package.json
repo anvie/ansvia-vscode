@@ -6,7 +6,8 @@
     "repository": "https://github.com/anvie/ansvia-vscode",
     "version": "0.2.0",
     "engines": {
-        "vscode": "^1.36.0"
+        "vscode": "^1.36.0",
+        "node": ">=6.0.0"
     },
     "categories": [
         "Other"

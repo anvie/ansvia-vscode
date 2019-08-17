@@ -1,9 +1,8 @@
 
 import { window, workspace, ExtensionContext, commands, Uri, WorkspaceEdit, TextEdit } from 'vscode';
-import { getRootDir, ProjectType, getFlutterInfo, FlutterInfo } from './util';
+import { getRootDir, ProjectType, getFlutterInfo, FlutterInfo, openAndFormatFile } from './util';
 import { doGenerateBlocCode, BlocOpts } from './bloc';
 import { Cmd } from './cmd';
-import { openAndFormatFile } from './flutter_util';
 
 var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
