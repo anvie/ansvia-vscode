@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.2.1
+
+- Bug fix: Flutter code generator for model cannot parse field name in quote.
+- Improved: Flutter basic page generator.
+- Changed: Flutter List Widget items naming.
+- Added `d` type as f64 for server in model generator.
+
 ## 0.2.0
 
 - Added Flutter "edit page" code generator.

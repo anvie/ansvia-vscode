@@ -283,10 +283,10 @@ class ${namePascal}List extends StatelessWidget {
       builder: (context, state) {
         if (state is ${namePascal}ListLoading) {
           if (${nameCamel}s.length == 0){
-          return LoadingIndicator(key: ${projectNamePascal}Keys.loading);
+            return LoadingIndicator(key: ${projectNamePascal}Keys.loading);
           }
         } else if (state is ${namePascal}ListLoaded) {
-          ${nameCamel}s = state.${nameCamel}s;
+          ${nameCamel}s = state.items;
         }
         return ListView.builder(
           key: ${projectNamePascal}Keys.${nameCamel}List,

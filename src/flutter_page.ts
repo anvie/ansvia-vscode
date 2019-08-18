@@ -62,6 +62,7 @@ export async function generatePage(opts: GenPageOpts) {
       break;
     case PageKind.Basic:
       pageFilePath = `${screenDir}/${pageNameDir}/${nameSnake}_page.dart`;
+      break;
     case PageKind.FormAdd:
       pageFilePath = `${screenDir}/${pageNameDir}/${nameSnake}_add_page.dart`;
       break;
@@ -372,12 +373,13 @@ function _genCodeBasic(name: String, flutter: FlutterInfo, opts: GenPageOpts) {
   const namePascal = pascalCase(name);
 
   return `
+import 'package:flutter/material.dart';
+
 class ${namePascal}Page extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text("Add new ${namePascal}")),
-        body: _getBody(context));
+        appBar: AppBar(title: Text("${name}")), body: _getBody(context));
   }
 
   Widget _getBody(BuildContext context) {
@@ -386,17 +388,13 @@ class ${namePascal}Page extends StatelessWidget {
         children: <Widget>[
           Padding(
               padding: const EdgeInsets.all(10.0),
-              child: Form(
-                  child: Column(
-                children: <Widget>[
+              child: Container(
                   // @TODO(you): code here
-                ],
-              ))),
+                  )),
         ],
       ),
     );
   }
 }
-  
-  `;
+`;
 }

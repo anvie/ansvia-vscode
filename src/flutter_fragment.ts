@@ -81,18 +81,6 @@ export async function generateFragment(opts: GenFragmentOpts) {
   } else {
     window.showErrorMessage("No active opened code");
   }
-
-  //   switch (opts.kind) {
-  //     case FragmentKind.FormAutocompleteField: {
-  //       filePath = `${widgetDir}/${widgetNameDir}/${nameSnake}_list.dart`;
-  //       break;
-  //     }
-  //     default: {
-  //       window.showErrorMessage("Unknown kind");
-  //       return;
-  //     }
-  //   }
-
 }
 
 class Param {

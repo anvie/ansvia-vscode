@@ -82,6 +82,7 @@ export async function generateModel(opts: ServerOpts) {
           // add pub mod into mod.rs file
           insertUseDef(`${rootDir}/src/lib.rs`, "pub mod", `pub mod ${nameSnake}_dao;`);
           insertUseDef(`${rootDir}/src/dao.rs`, "pub use", `pub use crate::${nameSnake}_dao::${pascalCase(name)}Dao;`);
+          openFile(daoFile);
         });
       }
       break;
@@ -354,6 +355,10 @@ function generateDaoCode(name: string, fields: string[], opts: ServerOpts, build
       }
       case 'i64': {
         ty = "i64";
+        break;
+      }
+      case 'd': {
+        ty = "f64";
         break;
       }
       case 'z[]': {

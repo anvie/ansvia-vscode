@@ -71,7 +71,7 @@ export async function generateModelFromSQLDef(opts: GenModelOpts){
   }
 
   const reTableName = new RegExp('CREATE TABLE ([\\w_]+?) \\(');
-  const reField = new RegExp('([\\w_]*?) (BIGSERIAL|BIGINT|INT|INTEGER|DECIMAL|SMALLINT|SERIAL|VARCHAR|TEXT|FLOAT|DOUBLE|BOOLEAN|TIMESTAMP)(\\[\\])?');
+  const reField = new RegExp('\\"?([\\w_]*?)\\"? (BIGSERIAL|BIGINT|INT|INTEGER|DECIMAL|SMALLINT|SERIAL|VARCHAR|TEXT|FLOAT|DOUBLE|BOOLEAN|TIMESTAMP)(\\[\\])?');
 
   const editor = window.activeTextEditor!;
 
