@@ -1,6 +1,6 @@
 
 import { window, workspace, ExtensionContext, commands } from 'vscode';
-import { getRootDir, ProjectType, getFlutterInfo, FlutterInfo } from './util';
+import { getRootDir, ProjectType, getFlutterInfo, FlutterInfo, openAndFormatFile } from './util';
 import { doGenerateBlocCode, BlocOpts } from './bloc';
 import { Cmd } from './cmd';
 
@@ -93,14 +93,17 @@ export async function generateWidget(opts: GenWidgetOpts) {
     switch (opts.kind) {
       case WidgetKind.List: {
         fs.writeFileSync(widgetFilePath, _genCodeList(name, flutter, opts));
+        openAndFormatFile(widgetFilePath);
         break;
       }
       case WidgetKind.ListItem: {
         fs.writeFileSync(widgetFilePath, _genCodeListItem(name, flutter, opts));
+        openAndFormatFile(widgetFilePath);
         break;
       }
       case WidgetKind.DetailField: {
         fs.writeFileSync(widgetFilePath, _genCodeDetailField(name, flutter, opts));
+        openAndFormatFile(widgetFilePath);
         break;
       }
     }
@@ -187,7 +190,7 @@ class ${namePascal}ItemView extends StatelessWidget {
             title: Text(
               item.name,
               style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  TextStyle(color: Colors.grey[800], fontWeight: FontWeight.bold),
             ),
             subtitle: Column(
               children: <Widget>[
@@ -195,7 +198,7 @@ class ${namePascal}ItemView extends StatelessWidget {
                   children: <Widget>[
                     Icon(Icons.person, color: Colors.grey),
                     Text("subtitle 1",
-                        style: TextStyle(color: Colors.white))
+                        style: TextStyle(color: Colors.grey[800]))
                   ],
                 ),
                 Container(
@@ -258,10 +261,10 @@ class ${namePascal}List extends StatefulWidget {
 }
 
 class _${namePascal}ListState extends State<${namePascal}List> {
-  List<${namePascal}> ${nameCamel}s;
+  List<${namePascal}> items;
 
   _${namePascal}ListState(BuildContext context) {
-    ${nameCamel}s = [];  
+    items = [];
   }
 `);
 
@@ -309,12 +312,12 @@ class ${namePascal}List extends StatelessWidget {
           if (state is ${namePascal}ListLoading) {
             return LoadingIndicator(key: ${projectNamePascal}Keys.loading);
           } else if (state is ${namePascal}ListLoaded) {
-          final List<${namePascal}> ${nameCamel}s = state.${nameCamel}s;
+          final List<${namePascal}> items = state.items;
           return ListView.builder(
               key: ${projectNamePascal}Keys.${nameCamel}List,
-              itemCount: ${nameCamel}s.length,
+              itemCount: items.length,
               itemBuilder: (BuildContext context, int index) {
-              final item = ${nameCamel}s[index];
+              final item = items[index];
               return new ${namePascal}ItemView(item: item);
               },
           );
@@ -347,13 +350,13 @@ class _${namePascal}ListState extends State<${namePascal}List> {
   @override
   Widget build(BuildContext context) {
     // @TODO(*): code here
-    List<${namePascal}> ${nameCamel}s = [];
+    List<${namePascal}> items = [];
 
     return ListView.builder(
       // key: ${projectNamePascal}Keys.${nameCamel}List,
-      itemCount: ${nameCamel}s.length,
+      itemCount: items.length,
       itemBuilder: (BuildContext context, int index) {
-        final item = ${nameCamel}s[index];
+        final item = items[index];
         return new ${namePascal}ItemView(item: item);
       },
     );

@@ -42,9 +42,9 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate Popup Menu Button", () => generateButton(new GenButtonOpts(ButtonKind.PopupMenu))),
       new Cmd("Generate BloC (+event, +state, +CRUD, +model)", () => flutterBloc.generateBloc(new flutterBloc.GenBlocOpts(flutterBloc.BlocKind.CRUDMethods, true, true, true, true, false))),
       new Cmd("Generate BloC (+event, +state, +CRUD, -model)", () => flutterBloc.generateBloc(new flutterBloc.GenBlocOpts(flutterBloc.BlocKind.CRUDMethods, true, true, true, false, false))),
-      new Cmd("Generate BloC with LayeredRepo BLOC1 (+event, +state, +CRUD)", () => flutterBloc.generateBloc(new flutterBloc.GenBlocOpts(flutterBloc.BlocKind.CRUDMethods, true, true, true, false, true))),
-      new Cmd("Generate BloC with LayeredRepo BLOC2 (+event, +state, +CRUD, +model)", () => flutterBloc.generateBloc(new flutterBloc.GenBlocOpts(flutterBloc.BlocKind.CRUDMethods, true, true, true, true, true))),
-      new Cmd("Generate BloC with LayeredRepo BLOC3 (+event, +state, +CRUD, -model)", () => flutterBloc.generateBloc(new flutterBloc.GenBlocOpts(flutterBloc.BlocKind.CRUDMethods, true, true, true, false, true))),
+      new Cmd("Generate BloC with SmartRepo BLOC1 (+event, +state, +CRUD)", () => flutterBloc.generateBloc(new flutterBloc.GenBlocOpts(flutterBloc.BlocKind.CRUDMethods, true, true, true, false, true))),
+      new Cmd("Generate BloC with SmartRepo BLOC2 (+event, +state, +CRUD, +model)", () => flutterBloc.generateBloc(new flutterBloc.GenBlocOpts(flutterBloc.BlocKind.CRUDMethods, true, true, true, true, true))),
+      new Cmd("Generate BloC with SmartRepo BLOC3 (+event, +state, +CRUD, -model)", () => flutterBloc.generateBloc(new flutterBloc.GenBlocOpts(flutterBloc.BlocKind.CRUDMethods, true, true, true, false, true))),
     ];
     quickPick.onDidChangeSelection(selection => {
       if (selection[0]) {

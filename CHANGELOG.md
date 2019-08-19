@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.2.2
+
+- Rename LayeredRepo to SmartRepo.
+- Some minor fixes and improvements.
+
 ## 0.2.1
 
 - Bug fix: Flutter code generator for model cannot parse field name in quote.
@@ -30,7 +35,7 @@
 
 ## 0.1.6
 
-- Full BloC generator with layered repo.
+- Full BloC generator with smart repo.
 - List Widget generator with support of stateless and statefull options.
 
 ## 0.1.5

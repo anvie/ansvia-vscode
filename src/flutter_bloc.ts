@@ -19,15 +19,15 @@ export class GenBlocOpts {
   withState: boolean;
   withCRUD: boolean;
   withModel: boolean;
-  withLayeredRepo: boolean;
+  withSmartRepo: boolean;
   constructor(kind: BlocKind, withEvent: boolean = false, withState: boolean = false,
-    withCRUD: boolean = false, withModel: boolean = false, withLayeredRepo:boolean=false) {
+    withCRUD: boolean = false, withModel: boolean = false, withSmartRepo:boolean=false) {
     this.kind = kind;
     this.withEvent = withEvent;
     this.withState = withState;
     this.withCRUD = withCRUD;
     this.withModel = withModel;
-    this.withLayeredRepo = withLayeredRepo;
+    this.withSmartRepo = withSmartRepo;
   }
 }
 
@@ -237,7 +237,7 @@ import 'package:${projectNameSnake}_mobile/blocs/${nameSnake}/${nameSnake}_state
 import 'package:${projectNameSnake}_mobile/models/${nameSnake}.dart';
   `;
 
-  if (opts.withLayeredRepo){
+  if (opts.withSmartRepo){
     newLines.push(`import 'package:${projectNameSnake}_mobile/core/smart_repo.dart';`);
   }
 
@@ -277,7 +277,7 @@ class ${namePascal}Bloc extends Bloc<${namePascal}Event, ${namePascal}State> {
   Stream<${namePascal}State> _mapLoad${namePascal}ToState(Load${namePascal} event) async* {
     yield ${namePascal}ListLoading();`);
 
-    if (opts.withLayeredRepo){
+    if (opts.withSmartRepo){
       newLines.push(`
     final data = await repo.fetchApi(
       "entries", "/${nameSnake}/v1/list?offset=0&limit=10",
