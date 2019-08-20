@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.2.3
+
+- Some minor fixes.
+
 ## 0.2.2
 
 - Rename LayeredRepo to SmartRepo.
