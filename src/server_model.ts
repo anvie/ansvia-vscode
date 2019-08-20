@@ -109,6 +109,12 @@ function insertUseDef(filePath:string, insertAfterPattern: string, definition:st
 
   for (let [i, line] of lines.entries()) {
     if (!alreadyInserted) {
+      if (line.trim() === definition){
+        // already have
+        alreadyInserted = true;
+        newLines.push(line);
+        continue;
+      }
       if (line.trim().startsWith(insertAfterPattern)) {
         foundPattern = true;
       } else if (foundPattern) {
@@ -497,6 +503,10 @@ function generateModelCode(name: String, fields: String[], opts: ServerOpts) {
       }
       case 'i64': {
         ty = "i64";
+        break;
+      }
+      case 'd': {
+        ty = "f64";
         break;
       }
       case 'z[]': {
