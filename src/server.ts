@@ -1,4 +1,4 @@
-import { getRootDir, ProjectType } from "./util";
+import { getRootDir, ProjectType, openFile } from "./util";
 import { window, ExtensionContext, commands } from "vscode";
 import { Cmd } from "./cmd";
 import { generateModel, ServerOpts, ServerKind, generateModelFromSQLDef } from "./server_model";
@@ -22,7 +22,7 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate model", () => generateModel(new ServerOpts(ServerKind.Model))),
       new Cmd("Generate DAO inline", () => generateModel(new ServerOpts(ServerKind.DaoInline))),
       new Cmd("Generate DAO new file", () => generateModel(new ServerOpts(ServerKind.DaoNewFile))),
-      new Cmd("Generate Model to API type", () => generateModel(new ServerOpts(ServerKind.ModelToApiType))),
+      new Cmd("Generate Model to API type converter", () => generateModel(new ServerOpts(ServerKind.ModelToApiType))),
       new Cmd("Generate Model from SQL definition", () => generateModelFromSQLDef(new ServerOpts(ServerKind.Model))),
       // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
     ];
@@ -71,6 +71,8 @@ async function generateCode(opts: ServiceOpts) {
 
   generateApiCode(path, opts);
   generateServiceCode(`${rootDir}/src/service`, opts);
+
+  openFile(`${path}/${snakeCase(name)}.rs`);
 }
 
 function generateServiceCode(baseDir: String, opts: ServiceOpts) {

@@ -62,7 +62,7 @@ export async function generateModel(opts: ServerOpts) {
     case ServerKind.DaoNewFile: {
       const fieldsStr = await window.showInputBox({
         value: '',
-        placeHolder: 'Fields, eg: id:id,name:z,active:b,timestamp:dt,num:i,num:i64,keywords:z[]'
+        placeHolder: 'Fields, eg: name:z,active:b,timestamp:dt,num:i,num:i64,keywords:z[]'
       }) || "";
       let fields = fieldsStr.split(',').map((a) => a.trim()).filter((a) => a.length > 0);
       
@@ -410,6 +410,16 @@ use crate::{ID, result::Result, models::${namePascal}, schema::${tableName}};
 `);
   }
 
+  newLines.push(`
+#[derive(Insertable)]
+#[table_name = "${tableName}"]
+struct New${namePascal}<'a> {`);
+
+  for (let fld of newFields) {
+    newLines.push(`    pub ${fld[0]}: ${fld[1]},`);
+  }
+
+  newLines.push('}\n');
 
   newLines.push(`
 /// Data Access Object for ${name}
@@ -418,17 +428,7 @@ use crate::{ID, result::Result, models::${namePascal}, schema::${tableName}};
 pub struct ${namePascal}Dao<'a> {
     db: &'a PgConnection,
 }
-
-#[derive(Insertable)]
-#[table_name = "${tableName}"]
-struct New${namePascal}<'a> {
-    `.trim());
-
-  for (let fld of newFields) {
-    newLines.push(`    pub ${fld[0]}: ${fld[1]},`);
-  }
-
-  newLines.push('}\n');
+`);
 
   newLines.push(`
 impl<'a> ${namePascal}Dao<'a> {
