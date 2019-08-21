@@ -12,7 +12,8 @@ var fs = require('fs');
 
 export enum FragmentKind {
   FormAutocompleteField = 1,
-  ModelAddField
+  ModelAddField,
+  ModelEditField
 }
 
 export class GenFragmentOpts {
@@ -77,6 +78,11 @@ export async function generateFragment(opts: GenFragmentOpts) {
         reformatDocument(Uri.file(filePath));
         break;
       }
+      case FragmentKind.ModelEditField: {
+        _patchCodeEditModelField(filePath, flutter);
+        reformatDocument(Uri.file(filePath));
+        break;
+      }
     }
   } else {
     window.showErrorMessage("No active opened code");
@@ -84,47 +90,54 @@ export async function generateFragment(opts: GenFragmentOpts) {
 }
 
 class Param {
-  name:string;
-  ty:string;
-  constructor(name:string, ty:string){
+  name: string;
+  ty: string;
+  constructor(name: string, ty: string) {
     this.name = name;
     this.ty = ty;
   }
 }
 
-async function _patchCodeAddModelField(filePath: string, fieldsStr: string, flutter: FlutterInfo, builder: TextEditorEdit) {
+class NameAndOpts {
+  name: String;
+  opts: flutter_model.GenModelOpts;
+  constructor(name: String, opts: flutter_model.GenModelOpts) {
+    this.name = name;
+    this.opts = opts;
+  }
+}
+
+function getModelGeneratorOptsFromText(text: String): NameAndOpts {
   let reClass = new RegExp('class (\\w*)');
   let reFieldDecl = new RegExp('final (\\w+|List<\\w+>) (\\w+);');
   let reConstructor = new RegExp('\\w+\\(this\\.id.*?\\)');
   // let reConstructorParams = new RegExp();
   let reToMap = new RegExp('data\\["\\w*"\\] = this.\\w*;');
 
-  let lines = window.activeTextEditor!.document.getText().split('\n');
-
-  let fieldsStrList = fieldsStr.split(',').map((a) => a.trim());
+  let lines = text.split('\n');
 
   var className = "";
-  let params:Param[] = [];
+  let params: Param[] = [];
 
   // get class name and parse params
-  for (let _line of lines){
+  for (let _line of lines) {
     let linet = _line.trim();
     console.log(linet);
     let r = reClass.exec(linet);
-    if (r){
+    if (r) {
       className = r[1];
     }
     r = null;
     r = reFieldDecl.exec(linet);
-    if (r){
+    if (r) {
       // ignore `id` field
-      if (r[2] === 'id'){
+      if (r[2] === 'id') {
         continue;
       }
       // collect
       params.push(new Param(r[2], r[1]));
     }
-    if (reConstructor.test(linet)){
+    if (reConstructor.test(linet)) {
       break;
     }
   }
@@ -132,7 +145,7 @@ async function _patchCodeAddModelField(filePath: string, fieldsStr: string, flut
 
   let opts = new flutter_model.GenModelOpts();
   opts.fields = params.map((p) => {
-    switch(p.ty.toLowerCase()){
+    switch (p.ty.toLowerCase()) {
       case "int": {
         return p.name + ':i';
       }
@@ -161,17 +174,116 @@ async function _patchCodeAddModelField(filePath: string, fieldsStr: string, flut
         return p.name + ':z';
     }
   });
+  return new NameAndOpts(className, opts);
+}
 
-  console.log(`fieldsStrList: ${fieldsStrList}`);
-  opts.fields = opts.fields.concat(fieldsStrList);
+async function _patchCodeEditModelField(filePath: string, flutter: FlutterInfo) {
+  let text = window.activeTextEditor!.document.getText();
+  let lines = text.split('\n');
 
-  console.log("opts.fields:");
-  console.log(opts.fields);
-  
+  let nameAndOpts = getModelGeneratorOptsFromText(text);
+  let fieldsStr = await window.showInputBox({
+    value: nameAndOpts.opts.fields.join(','),
+    valueSelection: [0, 11],
+    placeHolder: 'Fields, eg: name:z,active:b,categories:z[]'
+  });
+  if (fieldsStr === undefined) {
+    return;
+  }
+  let newOpts = nameAndOpts.opts;
+  newOpts.fields = fieldsStr.split(',').map((a) => a.trim()).filter((a) => a.length > 0);
+  let newContent = flutter_model.genCode(nameAndOpts.name, flutter, newOpts);
+  // console.log("newContent generated: " + newContent);
 
-  let newContent = flutter_model.genCode(className, flutter, opts);
+  const editor = window.activeTextEditor!;
+  editor.edit(builder => {
+    builder.replace(new Range(new Position(0, 0), new Position(lines.length, 0)), newContent);
+  });
+}
 
-  builder.replace(new Range(new Position(0,0), new Position(lines.length,0)), newContent);
+async function _patchCodeAddModelField(filePath: string, fieldsStr: string, flutter: FlutterInfo, builder: TextEditorEdit) {
+  // let reClass = new RegExp('class (\\w*)');
+  // let reFieldDecl = new RegExp('final (\\w+|List<\\w+>) (\\w+);');
+  // let reConstructor = new RegExp('\\w+\\(this\\.id.*?\\)');
+  // // let reConstructorParams = new RegExp();
+  // let reToMap = new RegExp('data\\["\\w*"\\] = this.\\w*;');
+
+  let text = window.activeTextEditor!.document.getText();
+  let lines = text.split('\n');
+
+  let fieldsStrList = fieldsStr.split(',').map((a) => a.trim());
+
+  let nameAndOpts = getModelGeneratorOptsFromText(text);
+
+  // var className = "";
+  // let params:Param[] = [];
+
+  // // get class name and parse params
+  // for (let _line of lines){
+  //   let linet = _line.trim();
+  //   console.log(linet);
+  //   let r = reClass.exec(linet);
+  //   if (r){
+  //     className = r[1];
+  //   }
+  //   r = null;
+  //   r = reFieldDecl.exec(linet);
+  //   if (r){
+  //     // ignore `id` field
+  //     if (r[2] === 'id'){
+  //       continue;
+  //     }
+  //     // collect
+  //     params.push(new Param(r[2], r[1]));
+  //   }
+  //   if (reConstructor.test(linet)){
+  //     break;
+  //   }
+  // }
+  // // console.log(`params: ${params}`);
+
+  // let opts = new flutter_model.GenModelOpts();
+  // opts.fields = params.map((p) => {
+  //   switch(p.ty.toLowerCase()){
+  //     case "int": {
+  //       return p.name + ':i';
+  //     }
+  //     case "string": {
+  //       return p.name + ':z';
+  //     }
+  //     case "double": {
+  //       return p.name + ':d';
+  //     }
+  //     case "bool": {
+  //       return p.name + ':b';
+  //     }
+  //     case "list<string>": {
+  //       return p.name + ":z[]";
+  //     }
+  //     case "list<double>": {
+  //       return p.name + ":d[]";
+  //     }
+  //     case "list<bool>": {
+  //       return p.name + ":b[]";
+  //     }
+  //     case "list<int>": {
+  //       return p.name + ":i[]";
+  //     }
+  //     default:
+  //       return p.name + ':z';
+  //   }
+  // });
+
+  // console.log(`fieldsStrList: ${fieldsStrList}`);
+  nameAndOpts.opts.fields = nameAndOpts.opts.fields.concat(fieldsStrList);
+
+  // console.log("opts.fields:");
+  // console.log(opts.fields);
+
+
+  let newContent = flutter_model.genCode(nameAndOpts.name, flutter, nameAndOpts.opts);
+
+  builder.replace(new Range(new Position(0, 0), new Position(lines.length, 0)), newContent);
 
 }
 

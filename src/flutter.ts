@@ -34,6 +34,7 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate Model", () => generateModel(new GenModelOpts())),
       new Cmd("Generate Model from SQL definition", () => generateModelFromSQLDef(new GenModelOpts())),
       new Cmd("Add Model fields", () => generateFragment(new GenFragmentOpts(FragmentKind.ModelAddField))),
+      new Cmd("Edit Model fields", () => generateFragment(new GenFragmentOpts(FragmentKind.ModelEditField, true))),
       new Cmd("Generate Basic Page", () => generatePage(new GenPageOpts(PageKind.Basic))),
       new Cmd("Generate Detail Page", () => generatePage(new GenPageOpts(PageKind.Detail))),
       new Cmd("Generate Form Add Page", () => generatePage(new GenPageOpts(PageKind.FormAdd))),

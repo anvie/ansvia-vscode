@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.2.4
+
+- Added Flutter model fields updater.
+
 ## 0.2.3
 
 - Some minor fixes.
