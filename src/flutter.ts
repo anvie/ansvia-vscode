@@ -5,7 +5,7 @@ import { doGenerateBlocCode, BlocOpts } from './bloc';
 import { Cmd } from './cmd';
 import { generatePage, GenPageOpts, PageKind } from './flutter_page';
 import { generateWidget, GenWidgetOpts, WidgetKind } from './flutter_widget';
-import { generateModel, GenModelOpts, generateModelFromSQLDef } from './flutter_model';
+import { generateModel, GenModelOpts, generateModelFromSQLDef, generateModelFromApiType } from './flutter_model';
 import { generateFragment, GenFragmentOpts, FragmentKind } from './flutter_fragment';
 import { generateButton, GenButtonOpts, ButtonKind } from './flutter_button';
 import * as flutterBloc from './flutter_bloc';
@@ -32,6 +32,7 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate List Item Widget", () => generateWidget(new GenWidgetOpts(false, WidgetKind.ListItem))),
       new Cmd("Generate Detail Field Widget", () => generateWidget(new GenWidgetOpts(false, WidgetKind.DetailField, true))),
       new Cmd("Generate Model", () => generateModel(new GenModelOpts())),
+      new Cmd("Generate Model from Rust struct", () => generateModelFromApiType()),
       new Cmd("Generate Model from SQL definition", () => generateModelFromSQLDef(new GenModelOpts())),
       new Cmd("Add Model fields", () => generateFragment(new GenFragmentOpts(FragmentKind.ModelAddField))),
       new Cmd("Edit Model fields", () => generateFragment(new GenFragmentOpts(FragmentKind.ModelEditField, true))),

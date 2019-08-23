@@ -254,7 +254,7 @@ function generateModelToApiConverter(opts: ServerOpts, builder: TextEditorEdit):
   const editor = window.activeTextEditor!;
 
   const text = editor.document.getText(editor.selection);
-  console.log("selected text: " + text);
+  // console.log("selected text: " + text);
 
   const reName = new RegExp("pub struct (\\w*) {");
   const reField = new RegExp("pub (\\w*): *(\\w*),?");
@@ -263,7 +263,7 @@ function generateModelToApiConverter(opts: ServerOpts, builder: TextEditorEdit):
 
   let lines = text.split('\n');
   let newLines = [];
-  let fields = [];
+  // let fields = [];
 
   for (let line of lines) {
     var s = reName.exec(line);

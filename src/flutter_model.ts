@@ -1,6 +1,6 @@
 
 import { window } from 'vscode';
-import { getFlutterInfo, FlutterInfo, openAndFormatFile } from './util';
+import { getFlutterInfo, FlutterInfo, openAndFormatFile, openFile } from './util';
 
 var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
@@ -60,6 +60,131 @@ export async function generateModel(opts: GenModelOpts) {
     fs.writeFileSync(modelFilePath, genCode(name, flutter, opts));
     openAndFormatFile(modelFilePath);
   }
+}
+
+class Field {
+  name:String;
+  ty:String;
+  constructor(name:String, ty:String){
+    this.name = name;
+    this.ty = ty;
+  }
+}
+
+export async function generateModelFromApiType(): Promise<void> {
+  const flutter = getFlutterInfo();
+
+  if (!flutter) {
+    window.showWarningMessage("No flutter project");
+    return;
+  }
+  const reName = new RegExp("pub struct (\\w*) {");
+  const reField = new RegExp("pub (\\w*): *([a-zA-Z0-9_<>:]*),?");
+
+  const editor = window.activeTextEditor!;
+  const text = editor.document.getText(editor.selection);
+
+  let name = "";
+  let fields = [];
+
+
+  let lines = text.split('\n');
+  // let newLines = [];
+
+  for (let line of lines) {
+    var s = reName.exec(line);
+    if (s && s[1]) {
+      if (name !== "") {
+        window.showWarningMessage("Name already defined: " + name);
+        return;
+      }
+      name = s[1].trim();
+      continue;
+    }
+    if (name.length > 0) {
+      s = reField.exec(line);
+      if (s === null) {
+        continue;
+      }
+      console.log("s: " + s);
+      console.log("s[2]: " + s[2]);
+      if (s[1] === 'id'){
+        // ignore id
+        continue;
+      }
+      if (s[1]) {
+        switch (s[2].trim()){
+          case "String": {
+            fields.push(`${s[1]}:z`);
+            break;
+          }
+          case "ID": 
+          case "i16": 
+          case "u16": 
+          case "i32": 
+          case "u32": 
+          case "i64": 
+          case "u64": 
+          case "u32": {
+            fields.push(`${s[1]}:i`);
+            break;
+          }
+          case "f32": 
+          case "f64": {
+            fields.push(`${s[1]}:d`);
+            break;
+          }
+          case "Vec<String>": {
+            fields.push(`${s[1]}:z[]`);
+            break;
+          }
+          case "Vec<ID>":
+          case "Vec<i32>":
+          case "Vec<u32>":
+          case "Vec<i16>":
+          case "Vec<u16>":
+          case "Vec<i64>":
+          case "Vec<u64>": {
+            fields.push(`${s[1]}:i[]`);
+            break;
+          }
+          case "NaiveDateTime": {
+            fields.push(`${s[1]}:dt`);
+            break;
+          }
+          default: {
+            let isPlural = s[2].startsWith('Vec<');
+            if (isPlural){
+              if (s[2].endsWith('>')){
+                s[2] = s[2].substring(0, s[2].length - 1);
+              }
+              fields.push(`${s[1]}:${s[2]}[]`);
+            }else{
+              fields.push(`${s[1]}:${s[2].trim()}`);
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+
+
+  if (name === "") {
+    window.showWarningMessage("Cannot get model name");
+  }
+
+  const nameSnake = snakeCase(name);
+
+  let opts = new GenModelOpts();
+  opts.fields = fields;
+
+  const generatedCode = genCode(name, flutter, opts);
+
+  var modelFilePath = `${flutter.projectDir}/lib/models/${nameSnake}.dart`;
+
+  fs.writeFileSync(modelFilePath, generatedCode + '\n');
+  openAndFormatFile(modelFilePath);
 }
 
 export async function generateModelFromSQLDef(opts: GenModelOpts){
@@ -216,11 +341,15 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
     var newFieldName = _field.trim();
     var tyIsPlural = false;
     var ty = "String";
+    var customType = "";
 
     let s = _field.split(':');
 
     if (s.length === 1) {
       s.push('z');
+    }
+    if (s.length > 2) {
+      s = [s[0], s[s.length - 1]];
     }
     newFieldName = s[0];
 
@@ -276,6 +405,17 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
         ty = "List<bool>";
         break;
       }
+      default: {
+        tyIsPlural = s[1].endsWith('[]');
+        customType = s[1].trim();
+        if (tyIsPlural){
+          customType = s[1].substring(0, s[1].length - 2).trim();
+          ty = `List<${customType}>`;
+        }else{
+          ty = `${customType}`;
+        }
+        break;
+      }
     }
 
     console.log("paramName: " + newFieldName);
@@ -287,11 +427,27 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
     supers.push(newFieldNameCamel);
 
     fields.push(`  final ${ty} ${newFieldNameCamel};`);
-    toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel};`);
+    if (customType.length === 0){
+      toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel};`);
+    }else{
+      if (tyIsPlural){
+        toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel}.map((a) => a.toMap()).toList();`);
+      }else{
+        toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel}.toMap();`);
+      }
+    }
     if (tyIsPlural) {
-      fromMaps.push(`List.from(data['${newFieldNameSnake}'])`);
+      if (customType.length === 0){
+        fromMaps.push(`List.from(data['${newFieldNameSnake}'])`);
+      }else{
+        fromMaps.push(`List.from(data['${newFieldNameSnake}'].map((a) => ${customType}.fromMap(a)).toList())`);
+      }
     } else {
-      fromMaps.push(`data['${newFieldNameSnake}'] as ${ty}`);
+      if (customType.length === 0){
+        fromMaps.push(`data['${newFieldNameSnake}'] as ${ty}`);
+      }else{
+        fromMaps.push(`${customType}.fromMap(data['${newFieldNameSnake}'])`);
+      }
     }
     copiesParams.push(`${ty} ${newFieldNameCamel}`);
     copiesAssigns.push(`${newFieldNameCamel} ?? this.${newFieldNameCamel}`);

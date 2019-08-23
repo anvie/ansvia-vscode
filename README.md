@@ -11,6 +11,7 @@ Ansvia VSCode extension, to simplify programmer's life.
 * Flutter model edit fields.
 * Flutter model add fields.
 * Generate Flutter model from SQL definition.
+* Generate Flutter model from Rust struct.
 * Flutter list widget (bloc/non bloc/stateless/statefull).
 * Flutter list item widget.
 * Flutter detail field widget.

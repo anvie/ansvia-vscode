@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.2.5
+
+- Generate Flutter model from Rust struct.
+- Flutter model generator now support custom types.
+
 ## 0.2.4
 
 - Added Flutter model fields updater.
