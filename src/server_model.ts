@@ -27,7 +27,7 @@ export async function generateModel(opts: ServerOpts) {
     return;
   }
 
-  console.log("rootDir: " + rootDir);
+  // console.log("rootDir: " + rootDir);
 
   var name = "";
 
@@ -284,8 +284,8 @@ function generateModelToApiConverter(opts: ServerOpts, builder: TextEditorEdit):
       if (s === null) {
         continue;
       }
-      console.log("s: " + s);
-      console.log("s[2]: " + s[2]);
+      // console.log("s: " + s);
+      // console.log("s[2]: " + s[2]);
       if (s[1]) {
         if (s[2].trim() === "String") {
           newLines.push(`            ${s[1]}: self.${s[1]}.to_owned(),`);
@@ -372,7 +372,7 @@ function generateDaoCode(name: string, fields: string[], opts: ServerOpts, build
       }
     }
 
-    console.log("newFieldName: " + newFieldName);
+    // console.log("newFieldName: " + newFieldName);
 
     const newFieldNameSnake = snakeCase(newFieldName);
 
