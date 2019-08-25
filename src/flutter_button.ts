@@ -1,14 +1,10 @@
 
-import { window, workspace, ExtensionContext, commands, TextEditorEdit } from 'vscode';
-import { getRootDir, ProjectType, getFlutterInfo, FlutterInfo } from './util';
-import { doGenerateBlocCode, BlocOpts } from './bloc';
-import { Cmd } from './cmd';
+import { window } from 'vscode';
+import { getFlutterInfo, FlutterInfo } from './util';
 
-var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
 var pascalCase = require('pascal-case');
 
-var fs = require('fs');
 
 export enum ButtonKind {
   PopupMenu = 1,
@@ -49,7 +45,7 @@ export async function generateButton(opts: GenButtonOpts) {
     switch (opts.kind) {
       case ButtonKind.PopupMenu: {
         editor.edit(builder => {
-          var result = _patchCode(name, flutter, builder);
+          var result = _patchCode(name, flutter);
           builder.replace(editor.selection.anchor, result);
         });
         break;
@@ -60,8 +56,7 @@ export async function generateButton(opts: GenButtonOpts) {
   }
 }
 
-function _patchCode(fieldsStr:String, flutter: FlutterInfo, builder: TextEditorEdit) {
-  const projectNameSnake = snakeCase(flutter.projectName);
+function _patchCode(fieldsStr:String, flutter: FlutterInfo) {
   const projectNamePascal = pascalCase(flutter.projectName);
   // const nameSnake = snakeCase(name);
   // const nameCamel = camelCase(name);

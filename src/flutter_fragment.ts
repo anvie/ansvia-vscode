@@ -1,8 +1,7 @@
 
-import { window, Selection, Position, Range, TextEditorEdit, WorkspaceEdit, TextEdit, Uri, workspace } from 'vscode';
+import { window, Position, Range, TextEditorEdit, WorkspaceEdit, Uri, workspace } from 'vscode';
 import { getFlutterInfo, FlutterInfo, reformatDocument } from './util';
 import * as flutter_model from './flutter_model';
-import { print } from 'util';
 
 var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
@@ -73,13 +72,13 @@ export async function generateFragment(opts: GenFragmentOpts) {
       }
       case FragmentKind.ModelAddField: {
         editor.edit(builder => {
-          _patchCodeAddModelField(filePath, name, flutter, builder);
+          _patchCodeAddModelField(name, flutter, builder);
         });
         reformatDocument(Uri.file(filePath));
         break;
       }
       case FragmentKind.ModelEditField: {
-        _patchCodeEditModelField(filePath, flutter);
+        _patchCodeEditModelField(flutter);
         reformatDocument(Uri.file(filePath));
         break;
       }
@@ -111,8 +110,6 @@ function getModelGeneratorOptsFromText(text: String): NameAndOpts {
   let reClass = new RegExp('class (\\w*)');
   let reFieldDecl = new RegExp('final (\\w+|List<\\w+>) (\\w+);');
   let reConstructor = new RegExp('\\w+\\(this\\.id.*?\\)');
-  // let reConstructorParams = new RegExp();
-  let reToMap = new RegExp('data\\["\\w*"\\] = this.\\w*;');
 
   let lines = text.split('\n');
 
@@ -177,7 +174,7 @@ function getModelGeneratorOptsFromText(text: String): NameAndOpts {
   return new NameAndOpts(className, opts);
 }
 
-async function _patchCodeEditModelField(filePath: string, flutter: FlutterInfo) {
+async function _patchCodeEditModelField(flutter: FlutterInfo) {
   let text = window.activeTextEditor!.document.getText();
   let lines = text.split('\n');
 
@@ -201,7 +198,7 @@ async function _patchCodeEditModelField(filePath: string, flutter: FlutterInfo) 
   });
 }
 
-async function _patchCodeAddModelField(filePath: string, fieldsStr: string, flutter: FlutterInfo, builder: TextEditorEdit) {
+async function _patchCodeAddModelField(fieldsStr: string, flutter: FlutterInfo, builder: TextEditorEdit) {
   // let reClass = new RegExp('class (\\w*)');
   // let reFieldDecl = new RegExp('final (\\w+|List<\\w+>) (\\w+);');
   // let reConstructor = new RegExp('\\w+\\(this\\.id.*?\\)');

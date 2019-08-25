@@ -1,7 +1,7 @@
 
-import { window, workspace, ExtensionContext, commands } from 'vscode';
+import { window, ExtensionContext, commands } from 'vscode';
 import { getRootDir, ProjectType } from './util';
-import { doGenerateBlocCode, BlocOpts } from './bloc';
+import { doGenerateBlocCode } from './bloc';
 import { Cmd } from './cmd';
 import { generatePage, GenPageOpts, PageKind } from './flutter_page';
 import { generateWidget, GenWidgetOpts, WidgetKind } from './flutter_widget';
@@ -111,29 +111,29 @@ export async function generateFlutter(opts: FlutterOpts) {
     if (opts.statefulScreenPage) {
       doGenerateBlocCode(projectName, rootDir, name, { withModel: true, commentCode: false });
 
-      fs.appendFileSync(screenFile, generateStatefulScreenPageCode(projectName, name, opts));
+      fs.appendFileSync(screenFile, generateStatefulScreenPageCode(projectName, name));
 
-      updateBlocCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_bloc.dart`, projectName, name, opts);
-      updateEventCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_event.dart`, projectName, name, opts);
-      updateStateCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_state.dart`, projectName, name, opts);
+      updateBlocCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_bloc.dart`, projectName, name);
+      updateEventCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_event.dart`, projectName, name);
+      updateStateCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_state.dart`, name);
 
       // fs.appendFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_event.dart`, generateEventCode(projectName, name, opts));
       // fs.appendFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_state.dart`, generateStateCode(projectName, name, opts));
 
       // generate item widget
-      fs.appendFileSync(`${libDir}/widgets/${nameSnake}_item_view.dart`, generateWidgetCode(projectName, name, opts));
+      fs.appendFileSync(`${libDir}/widgets/${nameSnake}_item_view.dart`, generateWidgetCode(projectName, name));
 
       // generate bloc code for create operation
-      generateBlocCodeForCreateOperation(`${libDir}/blocs`, projectName, name, opts);
+      generateBlocCodeForCreateOperation(`${libDir}/blocs`, projectName, name);
 
       // generate add page
-      generateAddPage(`${libDir}/screens/${nameSnake}`, projectName, name, opts);
+      generateAddPage(`${libDir}/screens/${nameSnake}`, projectName, name);
 
       // generate detail page
-      generateDetailPage(`${libDir}/screens/${nameSnake}`, projectName, name, opts);
+      generateDetailPage(`${libDir}/screens/${nameSnake}`, projectName, name);
 
       // generate bloc code for detail page
-      generateBlocCodeForDetailOperation(`${libDir}/blocs`, projectName, name, opts);
+      generateBlocCodeForDetailOperation(`${libDir}/blocs`, projectName, name);
 
     } else {
       // @TODO(robin): code here
@@ -141,7 +141,7 @@ export async function generateFlutter(opts: FlutterOpts) {
   }
 }
 
-function generateDetailPage(baseDir: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+function generateDetailPage(baseDir: String, projectName: String | undefined, name: String | undefined) {
   const projectNameSnake = snakeCase(projectName);
   const nameSnake = snakeCase(name);
   const namePascal = pascalCase(name);
@@ -268,7 +268,7 @@ class _${namePascal}DetailState extends State<${namePascal}DetailPage> {
   fs.writeFileSync(`${baseDir}/${nameSnake}_detail_page.dart`, code.trim());
 }
 
-function generateAddPage(baseDir: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+function generateAddPage(baseDir: String, projectName: String | undefined, name: String | undefined) {
   const projectNameSnake = snakeCase(projectName);
   const nameSnake = snakeCase(name);
   const namePascal = pascalCase(name);
@@ -353,7 +353,7 @@ class _${namePascal}AddState extends State<${namePascal}AddPage> {
   fs.writeFileSync(`${baseDir}/${nameSnake}_add_page.dart`, code.trim());
 }
 
-function generateBlocCodeForDetailOperation(baseDir: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+function generateBlocCodeForDetailOperation(baseDir: String, projectName: String | undefined, name: String | undefined) {
   const nameSnake = snakeCase(name);
   const projectNameSnake = snakeCase(projectName);
   const namePascal = pascalCase(name);
@@ -529,7 +529,7 @@ export './${nameSnake}_detail_state.dart';
   fs.writeFileSync(`${baseDir}/${nameSnake}_detail/${nameSnake}_detail.dart`, modCode.trim());
 }
 
-function generateBlocCodeForCreateOperation(baseDir: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+function generateBlocCodeForCreateOperation(baseDir: String, projectName: String | undefined, name: String | undefined) {
   const nameSnake = snakeCase(name);
   const projectNameSnake = snakeCase(projectName);
   const namePascal = pascalCase(name);
@@ -649,7 +649,7 @@ export './${nameSnake}_add_state.dart';
   fs.writeFileSync(`${baseDir}/${nameSnake}_add/${nameSnake}_add.dart`, modCode.trim());
 }
 
-function generateStatefulScreenPageCode(projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+function generateStatefulScreenPageCode(projectName: String | undefined, name: String | undefined) {
   const nameProjectSnake = snakeCase(projectName);
   const nameProjectPascal = pascalCase(projectName);
   const namePascal = pascalCase(name);
@@ -835,7 +835,7 @@ class _${namePascal}sPage extends State<${namePascal}sPage> {
 }
 
 
-function updateBlocCode(path: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+function updateBlocCode(path: String, projectName: String | undefined, name: String | undefined) {
   var nameSnake = snakeCase(name);
   var namePascal = pascalCase(name);
   var nameCamel = camelCase(name);
@@ -847,8 +847,6 @@ function updateBlocCode(path: String, projectName: String | undefined, name: Str
   console.log(lines);
 
   var new_lines = [];
-  var header = true;
-  var hasImport = false;
 
   const len = lines.length;
 
@@ -926,7 +924,7 @@ Stream<${namePascal}State> _mapRemoveToState(Remove${namePascal} event) async* {
   var alreadyAdded = false;
 
   // inject 3 imports
-  for (let [i, line] of lines.entries()) {
+  for (let [, line] of lines.entries()) {
     if (line.startsWith("class") && !alreadyAdded) {
       new_lines.push(`import 'package:localstorage/localstorage.dart';
 import 'package:${snakeCase(projectName)}_mobile/models/${nameSnake}.dart';
@@ -952,7 +950,7 @@ import 'package:${snakeCase(projectName)}_mobile/api/${snakeCase(projectName)}_a
 }
 
 
-function updateEventCode(path: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+function updateEventCode(path: String, projectName: String | undefined, name: String | undefined) {
   var nameSnake = snakeCase(name);
   var namePascal = pascalCase(name);
 
@@ -1017,8 +1015,7 @@ class Remove${namePascal} extends ${namePascal}Event {
 }
 
 
-function updateStateCode(path: String, projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
-  var nameSnake = snakeCase(name);
+function updateStateCode(path: String, name: String | undefined) {
   var namePascal = pascalCase(name);
   const newCode = `
 
@@ -1035,7 +1032,7 @@ class ${namePascal}DeleteSuccess extends ${namePascal}State {
   fs.appendFileSync(path, newCode);
 }
 
-function generateWidgetCode(projectName: String | undefined, name: String | undefined, opts: FlutterOpts) {
+function generateWidgetCode(projectName: String | undefined, name: String | undefined) {
   const projectNameSnake = snakeCase(projectName);
   var nameSnake = snakeCase(name);
   var namePascal = pascalCase(name);

@@ -1,5 +1,5 @@
 
-import { window, workspace } from 'vscode';
+import { window } from 'vscode';
 import { getRootDir, ProjectType } from './util';
 var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
@@ -58,8 +58,8 @@ export function doGenerateBlocCode(projectName: String, rootDir: String, name: S
   if (fs.existsSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_bloc.dart`)) {
     window.showWarningMessage(`File already exists: ${nameSnake}_bloc.dart`);
   } else {
-    fs.writeFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_bloc.dart`, generateBlocCode(projectName, name, opts));
-    fs.writeFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_event.dart`, generateEventCode(projectName, name, opts));
+    fs.writeFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_bloc.dart`, generateBlocCode(projectName, name));
+    fs.writeFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_event.dart`, generateEventCode(name));
     fs.writeFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_state.dart`, generateStateCode(projectName, name, opts));
     fs.writeFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}.dart`, `export './${nameSnake}_bloc.dart';\n`);
     fs.appendFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}.dart`, `export './${nameSnake}_event.dart';\n`);
@@ -69,16 +69,16 @@ export function doGenerateBlocCode(projectName: String, rootDir: String, name: S
       // Generate models
       const path = `${libDir}/models/${nameSnake}.dart`;
       if (!fs.existsSync(path)) {
-        fs.writeFileSync(path, generateModelCode(projectName, name, opts));
+        fs.writeFileSync(path, generateModelCode(name, opts));
       } else {
         opts.commentCode = true;
-        fs.appendFileSync(path, generateModelCode(projectName, name, opts));
+        fs.appendFileSync(path, generateModelCode(name, opts));
       }
     }
   }
 }
 
-function generateModelCode(projectName: String | undefined, name: String | undefined, opts: BlocOpts) {
+function generateModelCode(name: String | undefined, opts: BlocOpts) {
   const namePascal = pascalCase(name);
   var code = `
 import 'package:equatable/equatable.dart';
@@ -126,7 +126,7 @@ class ${namePascal} extends Equatable {
   return newLines.join('\n');
 }
 
-function generateBlocCode(projectName: String | undefined, name: String | undefined, opts: BlocOpts) {
+function generateBlocCode(projectName: String | undefined, name: String | undefined) {
   var nameSnake = snakeCase(name);
   var namePascal = pascalCase(name);
   return `
@@ -148,8 +148,7 @@ class ${namePascal}Bloc extends Bloc<${namePascal}Event, ${namePascal}State> {
 }
 
 
-function generateEventCode(projectName: String | undefined, name: String | undefined, opts: BlocOpts) {
-  var nameSnake = snakeCase(name);
+function generateEventCode(name: String | undefined) {
   var namePascal = pascalCase(name);
   return `
 import 'package:equatable/equatable.dart';

@@ -1,15 +1,12 @@
 
-import { window, workspace, ExtensionContext, commands } from 'vscode';
-import { getRootDir, ProjectType, getFlutterInfo, FlutterInfo, openAndFormatFile } from './util';
-import { doGenerateBlocCode, BlocOpts } from './bloc';
-import { Cmd } from './cmd';
+import { window } from 'vscode';
+import { getFlutterInfo, FlutterInfo, openAndFormatFile } from './util';
 
 var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
 var pascalCase = require('pascal-case');
 
 var fs = require('fs');
-var yaml = require('js-yaml');
 
 export enum WidgetKind {
   List = 1,
@@ -97,12 +94,12 @@ export async function generateWidget(opts: GenWidgetOpts) {
         break;
       }
       case WidgetKind.ListItem: {
-        fs.writeFileSync(widgetFilePath, _genCodeListItem(name, flutter, opts));
+        fs.writeFileSync(widgetFilePath, _genCodeListItem(name, flutter));
         openAndFormatFile(widgetFilePath);
         break;
       }
       case WidgetKind.DetailField: {
-        fs.writeFileSync(widgetFilePath, _genCodeDetailField(name, flutter, opts));
+        fs.writeFileSync(widgetFilePath, _genCodeDetailField());
         openAndFormatFile(widgetFilePath);
         break;
       }
@@ -110,7 +107,7 @@ export async function generateWidget(opts: GenWidgetOpts) {
   }
 }
 
-function _genCodeDetailField(name: String, flutter: FlutterInfo, opts: GenWidgetOpts) {
+function _genCodeDetailField() {
   return `
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -132,10 +129,9 @@ class DetailField extends StatelessWidget {
 `.trim();
 }
 
-function _genCodeListItem(name: String, flutter: FlutterInfo, opts: GenWidgetOpts) {
+function _genCodeListItem(name: String, flutter: FlutterInfo) {
   const projectNameSnake = snakeCase(flutter.projectName);
   const nameSnake = snakeCase(name);
-  const nameCamel = camelCase(name);
   const namePascal = pascalCase(name);
 
   const code = `

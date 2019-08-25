@@ -1,8 +1,6 @@
 
-import { window, workspace, ExtensionContext, commands, Uri, WorkspaceEdit, TextEdit } from 'vscode';
-import { getRootDir, ProjectType, getFlutterInfo, FlutterInfo, openAndFormatFile } from './util';
-import { doGenerateBlocCode, BlocOpts } from './bloc';
-import { Cmd } from './cmd';
+import { window } from 'vscode';
+import { getFlutterInfo, FlutterInfo, openAndFormatFile } from './util';
 
 var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
@@ -79,23 +77,23 @@ export async function generatePage(opts: GenPageOpts) {
   } else {
     switch (opts.kind) {
       case PageKind.Basic:
-        fs.writeFileSync(pageFilePath, _genCodeBasic(name, flutter, opts));
+        fs.writeFileSync(pageFilePath, _genCodeBasic(name));
         break;
       case PageKind.Detail:
-        fs.writeFileSync(pageFilePath, await _genCodeDetail(name, flutter, opts));
+        fs.writeFileSync(pageFilePath, await _genCodeDetail(name, flutter));
         break;
       case PageKind.FormAdd:
-        fs.writeFileSync(pageFilePath, await _genCodeAddForm(name, flutter, opts));
+        fs.writeFileSync(pageFilePath, await _genCodeAddForm(name, flutter));
         break;
       case PageKind.FormUpdate:
-        fs.writeFileSync(pageFilePath, await _genCodeUpdateForm(name, flutter, opts));
+        fs.writeFileSync(pageFilePath, await _genCodeUpdateForm(name, flutter));
         break;
     }
     openAndFormatFile(pageFilePath);
   }
 }
 
-async function _genCodeDetail(name: String, flutter: FlutterInfo, opts: GenPageOpts) {
+async function _genCodeDetail(name: String, flutter: FlutterInfo) {
   const projectNameSnake = snakeCase(flutter.projectName);
   const nameSnake = snakeCase(name);
   const namePascal = pascalCase(name);
@@ -164,7 +162,7 @@ class _${namePascal}DetailPageState extends State<${namePascal}DetailPage> {
 
 }
 
-function _genCodeAddForm(name: String, flutter: FlutterInfo, opts: GenPageOpts) {
+function _genCodeAddForm(name: String, flutter: FlutterInfo) {
   const projectNameSnake = snakeCase(flutter.projectName);
   const nameSnake = snakeCase(name);
   const namePascal = pascalCase(name);
@@ -251,7 +249,7 @@ class _${namePascal}State extends State<${namePascal}AddPage> {
 }
 
 
-function _genCodeUpdateForm(name: String, flutter: FlutterInfo, opts: GenPageOpts) {
+function _genCodeUpdateForm(name: String, flutter: FlutterInfo) {
   const projectNameSnake = snakeCase(flutter.projectName);
   const nameSnake = snakeCase(name);
   const namePascal = pascalCase(name);
@@ -368,8 +366,7 @@ class _${namePascal}EditState extends State<${namePascal}EditPage> {
   `;
 }
 
-function _genCodeBasic(name: String, flutter: FlutterInfo, opts: GenPageOpts) {
-  const nameSnake = snakeCase(name);
+function _genCodeBasic(name: String) {
   const namePascal = pascalCase(name);
 
   return `

@@ -1,8 +1,7 @@
-import { getRootDir, ProjectType, openAndFormatFile, openFile, normalizeName, nameToPlural } from "./util";
-import { window, ExtensionContext, commands, TextEditorEdit, Position } from "vscode";;
+import { getRootDir, ProjectType, openFile, normalizeName, nameToPlural } from "./util";
+import { window, Position } from "vscode";;
 
 const snakeCase = require('snake-case');
-const camelCase = require('camel-case');
 const pascalCase = require('pascal-case');
 const fs = require('fs');
 
@@ -53,7 +52,7 @@ export async function generateModel(opts: ServerOpts) {
       }) || "";
       let fields = fieldsStr.split(',').map((a) => a.trim());
       editor.edit(builder => {
-        let result = generateModelCode(name, fields, opts);
+        let result = generateModelCode(name, fields);
         builder.replace(editor.selection.anchor, result);
       });
       break;
@@ -68,13 +67,13 @@ export async function generateModel(opts: ServerOpts) {
       
       if (opts.kind === ServerKind.DaoInline){
         editor.edit(builder => {
-          let result = generateDaoCode(name, fields, opts, builder);
+          let result = generateDaoCode(name, fields, opts);
           builder.replace(editor.selection.anchor, result);
         });
       }else if (opts.kind === ServerKind.DaoNewFile){
-        editor.edit(builder => {
+        editor.edit(() => {
           let nameSnake = snakeCase(name);
-          let result = generateDaoCode(name, fields, opts, builder);
+          let result = generateDaoCode(name, fields, opts);
           let daoFile = `${rootDir}/src/${nameSnake}_dao.rs`;
           fs.writeFileSync(daoFile, result);
 
@@ -89,7 +88,7 @@ export async function generateModel(opts: ServerOpts) {
     }
     case ServerKind.ModelToApiType: {
       editor.edit(builder => {
-        let result = generateModelToApiConverter(opts, builder);
+        let result = generateModelToApiConverter();
         let nextPos = editor.selection.end.line + 1;
         builder.replace(new Position(nextPos, 0), '\n' + result + '\n');
       });
@@ -107,7 +106,7 @@ function insertUseDef(filePath:string, insertAfterPattern: string, definition:st
   var foundPattern = false;
   var alreadyInserted = false;
 
-  for (let [i, line] of lines.entries()) {
+  for (let [, line] of lines.entries()) {
     if (!alreadyInserted) {
       if (line.trim() === definition){
         // already have
@@ -128,7 +127,7 @@ function insertUseDef(filePath:string, insertAfterPattern: string, definition:st
   fs.writeFileSync(filePath, newLines.join('\n'));
 }
 
-export async function generateModelFromSQLDef(opts: ServerOpts) {
+export async function generateModelFromSQLDef(_: ServerOpts) {
 
   const reTableName = new RegExp('CREATE TABLE ([\\w_]+?) \\(');
   const reField = new RegExp('^\"?([\\w_]*?)\"? *?(BIGSERIAL|BIGINT|INT|INTEGER|DECIMAL|SMALLINT|SERIAL|VARCHAR|TEXT|FLOAT|DOUBLE|BOOLEAN|TIMESTAMP)(\\[\\])?');
@@ -174,7 +173,6 @@ export async function generateModelFromSQLDef(opts: ServerOpts) {
     const sqlTy = s[2].toLowerCase();
     const isPlural = s[3] ? true : false;
 
-    const fieldCamel = camelCase(field);
 
     switch (sqlTy) {
       case "bigserial":
@@ -239,9 +237,8 @@ export async function generateModelFromSQLDef(opts: ServerOpts) {
   }
 
 
-  const nameSnake = snakeCase(name);
 
-  const generatedCode = generateModelCode(name, fields, opts);
+  const generatedCode = generateModelCode(name, fields);
 
   var modelFilePath = `${rootDir}/src/models.rs`;
 
@@ -250,7 +247,7 @@ export async function generateModelFromSQLDef(opts: ServerOpts) {
 }
 
 
-function generateModelToApiConverter(opts: ServerOpts, builder: TextEditorEdit): string {
+function generateModelToApiConverter(): string {
   const editor = window.activeTextEditor!;
 
   const text = editor.document.getText(editor.selection);
@@ -304,7 +301,7 @@ function generateModelToApiConverter(opts: ServerOpts, builder: TextEditorEdit):
   return newLines.join('\n');
 }
 
-function generateDaoCode(name: string, fields: string[], opts: ServerOpts, builder: TextEditorEdit) {
+function generateDaoCode(name: string, fields: string[], opts: ServerOpts) {
   name = normalizeName(name);
   const namePascal = pascalCase(name);
   const nameSnake = snakeCase(name);
@@ -313,7 +310,6 @@ function generateDaoCode(name: string, fields: string[], opts: ServerOpts, build
 
   for (let _field of fields) {
     var newFieldName = _field.trim();
-    var tyIsPlural = false;
     var ty = "&'a str";
 
     let s = _field.split(':');
@@ -354,19 +350,16 @@ function generateDaoCode(name: string, fields: string[], opts: ServerOpts, build
         break;
       }
       case 'z[]': {
-        tyIsPlural = true;
         ty = "&'a Vec<String>";
         break;
       }
       case 'i[]':
       case 'i32[]': {
-        tyIsPlural = true;
         ty = "Vec<i32>";
         break;
       }
       case 'i[]':
       case 'i64[]': {
-        tyIsPlural = true;
         ty = "Vec<i64>";
         break;
       }
@@ -446,7 +439,7 @@ impl<'a> ${namePascal}Dao<'a> {
   return newLines.join('\n');
 }
 
-function generateModelCode(name: String, fields: String[], opts: ServerOpts) {
+function generateModelCode(name: String, fields: String[]) {
   //   const editor = window.activeTextEditor!;
   const namePascal = pascalCase(name);
   //   const nameSnake = snakeCase(name);
@@ -455,7 +448,6 @@ function generateModelCode(name: String, fields: String[], opts: ServerOpts) {
 
   for (let _field of fields) {
     var newFieldName = _field.trim();
-    var tyIsPlural = false;
     var ty = "String";
 
     let s = _field.split(':');
@@ -496,19 +488,16 @@ function generateModelCode(name: String, fields: String[], opts: ServerOpts) {
         break;
       }
       case 'z[]': {
-        tyIsPlural = true;
         ty = "Vec<String>";
         break;
       }
       case 'i[]':
       case 'i32[]': {
-        tyIsPlural = true;
         ty = "Vec<i32>";
         break;
       }
       case 'i[]':
       case 'i64[]': {
-        tyIsPlural = true;
         ty = "Vec<i64>";
         break;
       }

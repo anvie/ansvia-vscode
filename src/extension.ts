@@ -1,6 +1,5 @@
 
-import { window, commands, ExtensionContext } from 'vscode';
-import { generateBloc, BlocOpts } from './bloc';
+import { ExtensionContext } from 'vscode';
 
 import * as flutter from './flutter';
 import * as service from './server';

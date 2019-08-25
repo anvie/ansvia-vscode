@@ -3,14 +3,14 @@ import { window, ExtensionContext, commands } from "vscode";
 import { Cmd } from "./cmd";
 import { generateModel, ServerOpts, ServerKind, generateModelFromSQLDef } from "./server_model";
 
-const snakeCase = require('snake-case');
-const camelCase = require('camel-case');
-const pascalCase = require('pascal-case');
-const fs = require('fs');
+import snakeCase = require('snake-case');
+import camelCase = require('camel-case');
+import pascalCase = require('pascal-case');
+import fs = require('fs');
 
 
 export interface ServiceOpts {
-  name: String;
+  name: string;
 }
 
 
