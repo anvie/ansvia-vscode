@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.2.6
+
+- Generate DAO update method from model and copy to clipboard
+- Fixup: Flutter model generator from Rust struct cannot handle boolean type.
+
 ## 0.2.5
 
 - Generate Flutter model from Rust struct.

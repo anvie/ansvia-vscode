@@ -254,7 +254,7 @@ function generateModelToApiConverter(): string {
   // console.log("selected text: " + text);
 
   const reName = new RegExp("pub struct (\\w*) {");
-  const reField = new RegExp("pub (\\w*): *(\\w*),?");
+  const reField = new RegExp("pub (\\w*): *([a-zA-Z0-9_<>:]*),?");
 
   var name = "";
 

@@ -7,6 +7,7 @@ import snakeCase = require('snake-case');
 import camelCase = require('camel-case');
 import pascalCase = require('pascal-case');
 import fs = require('fs');
+import { copyDaoUpdateMethod, DaoOpts, DaoKind } from "./server_dao";
 
 
 export interface ServiceOpts {
@@ -24,6 +25,7 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate DAO new file", () => generateModel(new ServerOpts(ServerKind.DaoNewFile))),
       new Cmd("Generate Model to API type converter", () => generateModel(new ServerOpts(ServerKind.ModelToApiType))),
       new Cmd("Generate Model from SQL definition", () => generateModelFromSQLDef(new ServerOpts(ServerKind.Model))),
+      new Cmd("Generate DAO update method from model and copy to clipboard", () => copyDaoUpdateMethod(new DaoOpts(DaoKind.UpdateMethod))),
       // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
     ];
     quickPick.onDidChangeSelection(selection => {

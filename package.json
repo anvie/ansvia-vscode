@@ -4,7 +4,8 @@
     "description": "Ansvia VSCode plugin as helper for developers",
     "publisher": "Ansvia",
     "repository": "https://github.com/anvie/ansvia-vscode",
-    "version": "0.2.5",
+    "license": "SEE LICENSE IN LICENSE",
+    "version": "0.2.6",
     "engines": {
         "vscode": "^1.36.0",
         "node": ">=6.0.0"
@@ -49,6 +50,7 @@
     },
     "dependencies": {
         "camel-case": "^3.0.0",
+        "clipboardy": "^2.1.0",
         "js-yaml": "^3.13.1",
         "pascal-case": "^2.0.1",
         "snake-case": "^2.1.0"

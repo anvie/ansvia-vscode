@@ -134,6 +134,10 @@ export async function generateModelFromApiType(): Promise<void> {
             fields.push(`${s[1]}:d`);
             break;
           }
+          case "bool": {
+            fields.push(`${s[1]}:b`);
+            break;
+          }
           case "Vec<String>": {
             fields.push(`${s[1]}:z[]`);
             break;
