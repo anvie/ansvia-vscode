@@ -1,4 +1,4 @@
-import { getRootDir, ProjectType, openFile } from "./util";
+import { getRootDir, ProjectType, openFile, insertLineInFile } from "./util";
 import { window, ExtensionContext, commands } from "vscode";
 import { Cmd } from "./cmd";
 import { generateModel, ServerOpts, ServerKind, generateModelFromSQLDef } from "./server_model";
@@ -86,7 +86,10 @@ function generateServiceCode(baseDir: String, opts: ServiceOpts) {
 
   const newCode = `impl_service!(${namePascal}Service, ${nameSnake});\n`;
 
-  fs.appendFileSync(`${baseDir}/services.rs`, newCode);
+  insertLineInFile(`${baseDir}/services.rs`, "^impl_service!\\(", `impl_service!(${namePascal}Service, ${nameSnake});`);
+  insertLineInFile(`${baseDir}/services.rs`, "^[\\w_]+?Service::new\\(\\),", `        ${namePascal}Service::new(),`);
+
+  // fs.appendFileSync(`${baseDir}/services.rs`, newCode);
 }
 
 function generateApiCode(path: String, opts: ServiceOpts) {

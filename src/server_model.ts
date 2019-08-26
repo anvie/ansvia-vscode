@@ -1,4 +1,4 @@
-import { getRootDir, ProjectType, openFile, normalizeName, nameToPlural } from "./util";
+import { getRootDir, ProjectType, openFile, normalizeName, nameToPlural, insertLineInFile } from "./util";
 import { window, Position } from "vscode";;
 
 const snakeCase = require('snake-case');
@@ -79,8 +79,8 @@ export async function generateModel(opts: ServerOpts) {
 
           // update lib.rs files
           // add pub mod into mod.rs file
-          insertUseDef(`${rootDir}/src/lib.rs`, "pub mod", `pub mod ${nameSnake}_dao;`);
-          insertUseDef(`${rootDir}/src/dao.rs`, "pub use", `pub use crate::${nameSnake}_dao::${pascalCase(name)}Dao;`);
+          insertLineInFile(`${rootDir}/src/lib.rs`, "pub mod", `pub mod ${nameSnake}_dao;`);
+          insertLineInFile(`${rootDir}/src/dao.rs`, "pub use", `pub use crate::${nameSnake}_dao::${pascalCase(name)}Dao;`);
           openFile(daoFile);
         });
       }
@@ -97,35 +97,6 @@ export async function generateModel(opts: ServerOpts) {
   }
 }
 
-
-function insertUseDef(filePath:string, insertAfterPattern: string, definition:string){
-  const modData = fs.readFileSync(filePath).toString();
-
-  var lines = modData.split(/\r?\n/);
-  var newLines = [];
-  var foundPattern = false;
-  var alreadyInserted = false;
-
-  for (let [, line] of lines.entries()) {
-    if (!alreadyInserted) {
-      if (line.trim() === definition){
-        // already have
-        alreadyInserted = true;
-        newLines.push(line);
-        continue;
-      }
-      if (line.trim().startsWith(insertAfterPattern)) {
-        foundPattern = true;
-      } else if (foundPattern) {
-        newLines.push(definition);
-        alreadyInserted = true;
-      }
-    }
-    newLines.push(line);
-  }
-
-  fs.writeFileSync(filePath, newLines.join('\n'));
-}
 
 export async function generateModelFromSQLDef(_: ServerOpts) {
 

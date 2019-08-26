@@ -151,3 +151,37 @@ export function shortcutTypeToRustType(ty: string): string {
       return ty;
   }
 }
+
+
+export function insertLineInFile(filePath:string, insertAfterPattern: string, definition:string){
+  const modData = fs.readFileSync(filePath).toString();
+  const pattern = new RegExp(insertAfterPattern);
+
+  var lines = modData.split(/\r?\n/);
+  var newLines = [];
+  var foundPattern = false;
+  var alreadyInserted = false;
+
+  for (let [, line] of lines.entries()) {
+    let linet = line.trim();
+    if (!alreadyInserted) {
+      if (linet === definition){
+        // already have
+        alreadyInserted = true;
+        newLines.push(line);
+        continue;
+      }
+      // if (line.trim().startsWith(insertAfterPattern)) {
+      if (pattern.test(linet)) {
+        foundPattern = true;
+      } else if (foundPattern) {
+        newLines.push(definition);
+        alreadyInserted = true;
+      }
+    }
+    newLines.push(line);
+  }
+
+  fs.writeFileSync(filePath, newLines.join('\n'));
+}
+
