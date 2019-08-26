@@ -1,6 +1,8 @@
 import { getRootDir, ProjectType, openFile, normalizeName, nameToPlural } from "./util";
 import { window, Position } from "vscode";
 
+import { ModelStruct } from "./rust_parser";
+
 import snakeCase = require('snake-case');
 import pascalCase = require('pascal-case');
 import fs = require('fs');
@@ -27,53 +29,33 @@ export async function copyDaoUpdateMethod(opts: DaoOpts) {
 
   const text = editor.document.getText(editor.selection);
 
-  const reName = new RegExp("pub struct (\\w*) {");
-  const reField = new RegExp("pub (\\w*): *([a-zA-Z0-9_<>:]*),?");
+  let model = ModelStruct.parse(text);
 
-  var name = "";
+  if (model === null){
+    return;
+  }
 
-  let lines = text.split('\n');
+  model = model!;
+
   let newLines = [];
-  let fields = [];
 
-  for (let line of lines) {
-    var s = reName.exec(line);
-    if (s && s[1]) {
-      if (name !== "") {
-        window.showWarningMessage("Name already defined: " + name);
-        return;
-      }
-      name = s[1].trim();
-      newLines.push(`    /// Update ${pascalCase(name)}`);
-      newLines.push(`    pub fn update(&self,id: ID,`);
+  newLines.push(`    /// Update ${pascalCase(model.name)}`);
+  newLines.push(`    pub fn update(&self,id: ID,`);
+
+  for (let field of model.fields){
+    if (field.name === "id" || field.name === "ts"){
       continue;
     }
-    if (name.length > 0) {
-      s = reField.exec(line);
-      if (s === null) {
-        continue;
-      }
-      // console.log("s: " + s);
-      // console.log("s[2]: " + s[2]);
-      if (s[1]) {
-        let fieldName = s[1].trim();
-        if (fieldName === "id" || fieldName === "ts"){
-          continue;
-        }
-        let ty = s[2].trim();
-        fields.push([fieldName, ty]);
-        if (ty === "String") {
-          newLines.push(`        ${fieldName}: &str,`);
-        } else if (ty.startsWith("Vec")) {
-          newLines.push(`        ${fieldName}: &${ty},`);
-        } else if (ty === "bool" || ty === "i16" || ty === "u16" ||
-          ty === "i32" || ty === "u32" || ty === "i64" || ty === "u64" ||
-          ty === "f32" || ty === "f64" || ty === "ID") {
-          newLines.push(`        ${fieldName}: ${ty},`);
-        } else {
-          newLines.push(`        ${s[1]}: &T,`);
-        }
-      }
+    if (field.ty === "String") {
+      newLines.push(`        ${field.name}: &str,`);
+    } else if (field.ty.startsWith("Vec")) {
+      newLines.push(`        ${field.name}: &${field.ty},`);
+    } else if (field.ty === "bool" || field.ty === "i16" || field.ty === "u16" ||
+      field.ty === "i32" || field.ty === "u32" || field.ty === "i64" || field.ty === "u64" ||
+      field.ty === "f32" || field.ty === "f64" || field.ty === "ID") {
+      newLines.push(`        ${field.name}: ${field.ty},`);
+    } else {
+      newLines.push(`        ${s[1]}: &T,`);
     }
   }
 
@@ -81,17 +63,22 @@ export async function copyDaoUpdateMethod(opts: DaoOpts) {
 
   // Build function code
 
-  let nameSnake = snakeCase(name);
+  let nameSnake = snakeCase(model.name);
 
   newLines.push(`        use crate::schema::${nameSnake}s::{self, dsl};
         diesel::update(dsl::${nameSnake}s.filter(dsl::id.eq(id)))
             .set((`);
 
 
-  for (let field of fields){
+  for (let field of model.fields){
     console.log("field: " + field);
-    let fieldName = field[0];
-    let ty = field[1];
+    let fieldName = field.name;
+    
+    if (field.name === "id" || field.name === "ts"){
+      continue;
+    }
+
+    let ty = field.ty;
 
     let fieldNameSnake = snakeCase(fieldName);
 
@@ -102,14 +89,92 @@ export async function copyDaoUpdateMethod(opts: DaoOpts) {
     }
   }
 
-
   newLines.push(`            ))
             .execute(self.db)
             .map(|a| a > 0)
             .map_err(From::from)
     }`);
 
+  let generatedCode = newLines.join('\n');
 
+  clipboardy.writeSync(generatedCode);
+
+  window.showInformationMessage("Generated code copied into clipboard!");
+
+}
+
+export async function copyDaoAddMethod() {
+  const rootDir = getRootDir(ProjectType.Server);
+
+  if (!rootDir) {
+    return;
+  }
+  const editor = window.activeTextEditor!;
+
+  const text = editor.document.getText(editor.selection);
+
+  let model = ModelStruct.parse(text);
+
+  if (model === null){
+    return;
+  }
+
+  model = model!;
+
+  let newLines = [];
+
+  let namePascal = pascalCase(model.name);
+
+  newLines.push(`    /// Add ${namePascal}`);
+  newLines.push(`    pub fn add_${snakeCase(model.name)}(&self,`);
+
+  for (let field of model.fields){
+    if (field.name === "id" || field.name === "ts"){
+      continue;
+    }
+    if (field.ty === "String") {
+      newLines.push(`        ${field.name}: &str,`);
+    } else if (field.ty.startsWith("Vec")) {
+      newLines.push(`        ${field.name}: &${field.ty},`);
+    } else if (field.ty === "bool" || field.ty === "i16" || field.ty === "u16" ||
+      field.ty === "i32" || field.ty === "u32" || field.ty === "i64" || field.ty === "u64" ||
+      field.ty === "f32" || field.ty === "f64" || field.ty === "ID") {
+      newLines.push(`        ${field.name}: ${field.ty},`);
+    } else {
+      newLines.push(`        ${s[1]}: &T,`);
+    }
+  }
+
+  newLines.push(`    ) -> Result<${namePascal}> {`);
+
+  // Build function code
+
+  let nameSnake = snakeCase(model.name);
+
+  newLines.push(`        use crate::schema::${nameSnake}s::{self, dsl};
+        diesel::insert_into(courier_services::table)
+            .values(&New${namePascal} {`);
+
+
+  for (let field of model.fields){
+    console.log("field: " + field);
+    let fieldName = field.name;
+    
+    if (field.name === "id" || field.name === "ts"){
+      continue;
+    }
+
+    // let ty = field.ty;
+
+    let fieldNameSnake = snakeCase(fieldName);
+
+    newLines.push(`            ${fieldNameSnake},`);
+  }
+
+  newLines.push(`            })
+            .get_result(self.db)
+            .map_err(From::from)
+    }`);
 
   let generatedCode = newLines.join('\n');
 
