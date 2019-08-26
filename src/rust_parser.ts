@@ -1,14 +1,5 @@
 
-
-
-export class Field {
-  name: string;
-  ty: string;
-  constructor(name: string, ty: string) {
-    this.name = name;
-    this.ty = ty;
-  }
-}
+import { Field } from './field';
 
 export class ModelStruct {
   name: string;

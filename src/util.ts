@@ -1,5 +1,6 @@
 
 import { window, workspace, Uri, commands, WorkspaceEdit, TextEdit } from "vscode";
+import { Field } from "./field";
 
 const fs = require("fs");
 var yaml = require('js-yaml');
@@ -118,5 +119,35 @@ export function nameToPlural(name: string): string {
     return name.substring(0, name.length - 1) + 'ies';
   } else {
     return name + 's';
+  }
+}
+
+export function parseFieldsStr(fieldsStr: string): Array<Field> {
+  return fieldsStr.split(',').map((a) => a.trim()).filter((a) => a.length > 0)
+    .map((a) => a.split(':')).map((a) => {
+      if (a.length === 1) {
+        return new Field(a[0], 'String');
+      } else {
+        return new Field(a[0], a[1]);
+      }
+    });
+}
+
+export function shortcutTypeToRustType(ty: string): string {
+  switch(ty){
+    case "z": return "String";
+    case "id": return "ID";
+    case "i": return "i64";
+    case "d": return "f64";
+    case "b": return "bool";
+    case "dt": return "NaiveDateTime";
+    case "z[]": return "Vec<String>";
+    case "id[]": return "Vec<ID>";
+    case "i[]": return "Vec<i64>";
+    case "d[]": return "Vec<f64>";
+    case "b[]": return "Vec<bool>";
+    case "dt[]": return "Vec<NaiveDateTime>";
+    default:
+      return ty;
   }
 }

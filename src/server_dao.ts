@@ -55,7 +55,7 @@ export async function copyDaoUpdateMethod(opts: DaoOpts) {
       field.ty === "f32" || field.ty === "f64" || field.ty === "ID") {
       newLines.push(`        ${field.name}: ${field.ty},`);
     } else {
-      newLines.push(`        ${s[1]}: &T,`);
+      newLines.push(`        ${field.name}: &T,`);
     }
   }
 
@@ -141,7 +141,7 @@ export async function copyDaoAddMethod() {
       field.ty === "f32" || field.ty === "f64" || field.ty === "ID") {
       newLines.push(`        ${field.name}: ${field.ty},`);
     } else {
-      newLines.push(`        ${s[1]}: &T,`);
+      newLines.push(`        ${field.name}: &T,`);
     }
   }
 
