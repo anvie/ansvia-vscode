@@ -126,7 +126,7 @@ export function parseFieldsStr(fieldsStr: string): Array<Field> {
   return fieldsStr.split(',').map((a) => a.trim()).filter((a) => a.length > 0)
     .map((a) => a.split(':')).map((a) => {
       if (a.length === 1) {
-        return new Field(a[0], 'String');
+        return new Field(a[0], 'z');
       } else {
         return new Field(a[0], a[1]);
       }

@@ -1,4 +1,4 @@
-import { getRootDir, ProjectType, openFile, normalizeName, nameToPlural } from "./util";
+import { getRootDir, ProjectType, openFile, normalizeName, nameToPlural, parseFieldsStr, shortcutTypeToRustType } from "./util";
 import { window, Position } from "vscode";
 
 import { ModelStruct } from "./rust_parser";
@@ -17,6 +17,61 @@ export class DaoOpts {
   constructor(kind: DaoKind) {
     this.kind = kind;
   }
+}
+
+export async function generateDaoUpdateMethod() {
+  const name = await window.showInputBox({
+    value: '',
+    placeHolder: 'Name, eg: status'
+  }) || "";
+  if (name === ""){
+    return;
+  }
+  const tableName = await window.showInputBox({
+    value: '',
+    placeHolder: 'Table name, eg: product'
+  }) || "";
+  if (tableName === ""){
+    return;
+  }
+  let nameSnake = snakeCase(name);
+  const fieldsStr = await window.showInputBox({
+    value: '',
+    placeHolder: 'Fields, eg: id:id,name:z,active:b,timestamp:dt,num:i,num:i64,keywords:z[]'
+  }) || "";
+
+  let fields = parseFieldsStr(fieldsStr);
+
+  const editor = window.activeTextEditor!;
+
+  editor.edit(builder => {
+    let newLines = [];
+
+    newLines.push(`    /// Update ${name}
+    pub fn update_${nameSnake}(
+        &self,
+        id: ID,`);
+
+    for (let field of fields){
+      newLines.push(`        ${field.name}: ${shortcutTypeToRustType(field.ty)},`);
+    }
+    newLines.push(`        ) -> Result<bool> {`);
+    newLines.push(`        use crate::schema::${snakeCase(tableName)}s::{self, dsl};`);
+    newLines.push(`        diesel::update(dsl::products.filter(dsl::id.eq(id)))
+            .set((`);
+    
+    for (let field of fields){
+      newLines.push(`            dsl::${field.nameSnake}.eq(&${field.nameSnake}),`);
+    }
+
+    newLines.push(`            ))`);
+    newLines.push(`            .execute(self.db)
+            .map(|a| a > 0)
+            .map_err(From::from)`);
+    newLines.push('    }');
+    let result = newLines.join('\n');
+    builder.replace(editor.selection.anchor, result);
+  });
 }
 
 export async function copyDaoUpdateMethod(opts: DaoOpts) {

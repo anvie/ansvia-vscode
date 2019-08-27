@@ -7,7 +7,7 @@ import snakeCase = require('snake-case');
 import camelCase = require('camel-case');
 import pascalCase = require('pascal-case');
 import fs = require('fs');
-import { copyDaoUpdateMethod, DaoOpts, DaoKind, copyDaoAddMethod } from "./server_dao";
+import { copyDaoUpdateMethod, DaoOpts, DaoKind, copyDaoAddMethod, generateDaoUpdateMethod } from "./server_dao";
 import { generateApiUpdateMethod } from "./server_api";
 
 
@@ -26,6 +26,7 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate DAO new file", () => generateModel(new ServerOpts(ServerKind.DaoNewFile))),
       new Cmd("Generate Model to API type converter", () => generateModel(new ServerOpts(ServerKind.ModelToApiType))),
       new Cmd("Generate Model from SQL definition", () => generateModelFromSQLDef(new ServerOpts(ServerKind.Model))),
+      new Cmd("Generate DAO update method", () => generateDaoUpdateMethod()),
       new Cmd("Generate DAO update method from model and copy to clipboard", () => copyDaoUpdateMethod(new DaoOpts(DaoKind.UpdateMethod))),
       new Cmd("Generate DAO add method from model and copy to clipboard", () => copyDaoAddMethod()),
       new Cmd("Generate API update method", () => generateApiUpdateMethod()),
@@ -125,7 +126,7 @@ pub struct New${namePascal} {
     pub name: String,
 }
 
-/// Holder untuk implementasi API endpoint publik untuk ${nameSnake}.
+/// Holder untuk implementasi API endpoint publik untuk ${opts.name}.
 pub struct PublicApi;
 
 #[api_group("${namePascal}", "public", base = "/${nameSnake}/v1")]

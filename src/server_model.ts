@@ -349,8 +349,7 @@ function generateDaoCode(name: string, fields: string[], opts: ServerOpts) {
 
 
   if (opts.kind === ServerKind.DaoNewFile){
-    newLines.push(`
-//! Dao implementation for ${name}
+    newLines.push(`//! Dao implementation for ${name}
 //! 
 
 use chrono::prelude::*;
@@ -394,8 +393,7 @@ impl<'a> ${namePascal}Dao<'a> {
 
   newLines.push(`
     diesel::insert_into(${tableName}::table)
-        .values(&New${namePascal} {
-`);
+        .values(&New${namePascal} {`);
 
   for (let fld of newFields) {
     newLines.push(`            ${fld[0]},`);
