@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.2.7
+
+- Generate DAO update method.
+- Change how to insert service definition in latest Mainframe version.
+
 ## 0.2.6
 
 - Generate DAO update method from model and copy to clipboard
