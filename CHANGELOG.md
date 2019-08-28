@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.2.8
+
+- Generate CRUD Web Vue views.
+
 ## 0.2.7
 
 - Generate DAO update method.

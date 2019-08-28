@@ -15,7 +15,6 @@ export interface ServiceOpts {
   name: string;
 }
 
-
 export function setup(context: ExtensionContext) {
   context.subscriptions.push(commands.registerCommand('extension.mainframe', async () => {
     const quickPick = window.createQuickPick();
@@ -85,7 +84,7 @@ function generateServiceCode(baseDir: String, opts: ServiceOpts) {
   const namePascal = pascalCase(opts.name);
   const nameSnake = snakeCase(opts.name);
 
-  const newCode = `impl_service!(${namePascal}Service, ${nameSnake});\n`;
+  // const newCode = `impl_service!(${namePascal}Service, ${nameSnake});\n`;
 
   insertLineInFile(`${baseDir}/services.rs`, "^impl_service!\\(", `impl_service!(${namePascal}Service, ${nameSnake});`);
   insertLineInFile(`${baseDir}/services.rs`, "^[\\w_]+?Service::new\\(\\),", `        ${namePascal}Service::new(),`);

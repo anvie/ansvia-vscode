@@ -5,7 +5,7 @@
     "publisher": "Ansvia",
     "repository": "https://github.com/anvie/ansvia-vscode",
     "license": "SEE LICENSE IN LICENSE",
-    "version": "0.2.7",
+    "version": "0.2.8",
     "engines": {
         "vscode": "^1.36.0",
         "node": ">=6.0.0"
@@ -15,18 +15,23 @@
     ],
     "activationEvents": [
         "onCommand:extension.flutter",
-        "onCommand:extension.mainframe"
+        "onCommand:extension.mainframe",
+        "onCommand:extension.web"
     ],
     "main": "./out/extension.js",
     "contributes": {
         "commands": [
             {
+                "command": "extension.mainframe",
+                "title": "ANSVIA: Generate Server code"
+            },
+            {
                 "command": "extension.flutter",
                 "title": "ANSVIA: Generate Flutter Code"
             },
             {
-                "command": "extension.mainframe",
-                "title": "ANSVIA: Generate Server code"
+                "command": "extension.web",
+                "title": "ANSVIA: Generate Web code"
             }
         ]
     },

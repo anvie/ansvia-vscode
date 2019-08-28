@@ -4,7 +4,15 @@ Ansvia VSCode extension, to simplify programmer's life.
 
 ## Features
 
-### Flutter
+### Server
+* Server service & API code generator.
+* Server data model generator.
+* Server data model generator from SQL definition.
+* Server db model type to API type converter.
+* Server model's DAO generator.
+* etc.. etc..
+
+### Mobile (Flutter)
 * BloC code generator.
 * Flutter CRUD UI complete flow.
 * Flutter model.
@@ -23,13 +31,8 @@ Ansvia VSCode extension, to simplify programmer's life.
 * Flutter Popup Menu Button.
 * etc.. etc..
 
-### Server
-* Server service & API code generator.
-* Server data model generator.
-* Server data model generator from SQL definition.
-* Server db model type to API type converter.
-* Server model's DAO generator.
-* etc.. etc..
+### Mobile (Vue.js)
+* Generate CRUD Vue page.
 
 ## Build
 
