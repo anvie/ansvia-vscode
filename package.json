@@ -14,9 +14,7 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:extension.flutter",
-        "onCommand:extension.mainframe",
-        "onCommand:extension.web"
+        "workspaceContains:**/ansvia-vscode.yaml"
     ],
     "main": "./out/extension.js",
     "contributes": {
