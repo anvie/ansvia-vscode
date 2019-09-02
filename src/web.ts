@@ -1,7 +1,7 @@
 
 import { window, ExtensionContext, commands } from 'vscode';
 import { getRootDir, ProjectType, openAndFormatFile, parseFieldsStr, nameToPlural } from './util';
-import { doGenerateBlocCode } from './bloc';
+// import { doGenerateBlocCode } from './bloc';
 import { Cmd } from './cmd';
 import { getWebInfo } from './web_util';
 import { Field } from './field';
@@ -63,7 +63,7 @@ export async function generateListingCrudPage(opts: GenWebOpts) {
     placeHolder: 'Name, eg: Todo'
   }) || "";
 
-  if (name === ""){
+  if (name === "") {
     return;
   }
 
@@ -113,7 +113,7 @@ export async function generateListingCrudPage(opts: GenWebOpts) {
           placeHolder: 'Fields, eg: id:id,name:z,active:b,timestamp:dt,num:i,num:i64,keywords:z[]'
         }) || "";
 
-        if (fieldsStr === ""){
+        if (fieldsStr === "") {
           return;
         }
 

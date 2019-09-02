@@ -1,7 +1,7 @@
 
 import { window, ExtensionContext, commands } from 'vscode';
 import { getRootDir, ProjectType } from './util';
-import { doGenerateBlocCode } from './bloc';
+// import { doGenerateBlocCode } from './bloc';
 import { Cmd } from './cmd';
 import { generatePage, GenPageOpts, PageKind } from './flutter_page';
 import { generateWidget, GenWidgetOpts, WidgetKind } from './flutter_widget';
@@ -25,7 +25,7 @@ export function setup(context: ExtensionContext) {
   context.subscriptions.push(commands.registerCommand('extension.flutter', async () => {
     const quickPick = window.createQuickPick();
     quickPick.items = [
-      new Cmd("Generate new CRUD flow", () => generateFlutter({ statefulScreenPage: true })),
+      // new Cmd("Generate new CRUD flow", () => generateFlutter({ statefulScreenPage: true })),
       new Cmd("Generate List Widget W1 (bloc mode, stateless)", () => generateWidget(new GenWidgetOpts(true, WidgetKind.List))),
       new Cmd("Generate List Widget W2 (bloc mode, stateful)", () => generateWidget(new GenWidgetOpts(true, WidgetKind.List, false, true))),
       new Cmd("Generate List Widget W3 (non bloc mode)", () => generateWidget(new GenWidgetOpts(false, WidgetKind.List))),
@@ -109,31 +109,31 @@ export async function generateFlutter(opts: FlutterOpts) {
     window.showWarningMessage(`File already exists: ${screenFile}`);
   } else {
     if (opts.statefulScreenPage) {
-      doGenerateBlocCode(projectName, rootDir, name, { withModel: true, commentCode: false });
+      // doGenerateBlocCode(projectName, rootDir, name, { withModel: true, commentCode: false });
 
-      fs.appendFileSync(screenFile, generateStatefulScreenPageCode(projectName, name));
+      // fs.appendFileSync(screenFile, generateStatefulScreenPageCode(projectName, name));
 
-      updateBlocCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_bloc.dart`, projectName, name);
-      updateEventCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_event.dart`, projectName, name);
-      updateStateCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_state.dart`, name);
+      // updateBlocCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_bloc.dart`, projectName, name);
+      // updateEventCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_event.dart`, projectName, name);
+      // updateStateCode(`${libDir}/blocs/${nameSnake}/${nameSnake}_state.dart`, name);
 
-      // fs.appendFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_event.dart`, generateEventCode(projectName, name, opts));
-      // fs.appendFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_state.dart`, generateStateCode(projectName, name, opts));
+      // // fs.appendFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_event.dart`, generateEventCode(projectName, name, opts));
+      // // fs.appendFileSync(`${libDir}/blocs/${nameSnake}/${nameSnake}_state.dart`, generateStateCode(projectName, name, opts));
 
-      // generate item widget
-      fs.appendFileSync(`${libDir}/widgets/${nameSnake}_item_view.dart`, generateWidgetCode(projectName, name));
+      // // generate item widget
+      // fs.appendFileSync(`${libDir}/widgets/${nameSnake}_item_view.dart`, generateWidgetCode(projectName, name));
 
-      // generate bloc code for create operation
-      generateBlocCodeForCreateOperation(`${libDir}/blocs`, projectName, name);
+      // // generate bloc code for create operation
+      // generateBlocCodeForCreateOperation(`${libDir}/blocs`, projectName, name);
 
-      // generate add page
-      generateAddPage(`${libDir}/screens/${nameSnake}`, projectName, name);
+      // // generate add page
+      // generateAddPage(`${libDir}/screens/${nameSnake}`, projectName, name);
 
-      // generate detail page
-      generateDetailPage(`${libDir}/screens/${nameSnake}`, projectName, name);
+      // // generate detail page
+      // generateDetailPage(`${libDir}/screens/${nameSnake}`, projectName, name);
 
-      // generate bloc code for detail page
-      generateBlocCodeForDetailOperation(`${libDir}/blocs`, projectName, name);
+      // // generate bloc code for detail page
+      // generateBlocCodeForDetailOperation(`${libDir}/blocs`, projectName, name);
 
     } else {
       // @TODO(robin): code here
@@ -392,7 +392,7 @@ class ${namePascal}DetailBloc extends Bloc<${namePascal}DetailEvent, ${namePasca
   Stream<${namePascal}DetailState> _mapLoadToState(Load${namePascal}Detail event) async* {
     yield ${namePascal}DetailLoading(block: true);
 
-    final data = await PublicApi.get("/${nameSnake}/v1/detail?id=\${event.${camelCase}Id}");
+    final data = await PublicApi.get("/${nameSnake}/v1/detail?id=\${event.${nameCamel}Id}");
     if (data != null){
       print("data: $data");
       Map<String, dynamic> entry = data["result"] as Map;
