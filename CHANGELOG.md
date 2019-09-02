@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.2.9
+
+- Auto generate error code from backend -> frontends.
+- Remove old BloC generator.
+
 ## 0.2.8
 
 - Generate CRUD Web Vue views.
