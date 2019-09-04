@@ -35,10 +35,11 @@ export async function generateModalPage(opts: GenWebModalOpts) {
         return;
     }
 
+    const webProjectDir = web.projectDir;
     const projectDir = await window.showInputBox({
       value: '',
       valueSelection: [0, 11],
-      placeHolder: 'Project dir, eg: /Users/surya/dev/'
+      placeHolder: `Project dir, eg: /Users/surya/. Def: ${webProjectDir}`
     }) || web.projectDir;
 
     var viewsDir = `${projectDir}/src/components/modal`;
