@@ -59,7 +59,7 @@ function genErrorCodeFromRust(rootDir:String, source:String, outs: Array<String>
         let s = reDec.exec(linet);
         if (s && s.length === 3){
           jsLines.push(`  static ${s[1]} = ${s[2]};`);
-          dartLines.push(`  static final int ${camelCase(s[1])} = ${s[2]};`);
+          dartLines.push(`  static const int ${camelCase(s[1])} = ${s[2]};`);
         }
       }
       if (linet === '}'){
