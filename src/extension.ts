@@ -7,11 +7,11 @@ import * as web from './web';
 import { setupSyncGen } from './syncgen';
 
 export function activate(context: ExtensionContext){
+	setupSyncGen();
+
     flutter.setup(context);
 	service.setup(context);
 	web.setup(context);
-
-	setupSyncGen();
 }
 
 // this method is called when your extension is deactivated

@@ -62,14 +62,16 @@ export async function generateModel(opts: GenModelOpts) {
   }
 }
 
-class Field {
-  name:String;
-  ty:String;
-  constructor(name:String, ty:String){
-    this.name = name;
-    this.ty = ty;
-  }
-}
+
+
+// class Field {
+//   name:String;
+//   ty:String;
+//   constructor(name:String, ty:String){
+//     this.name = name;
+//     this.ty = ty;
+//   }
+// }
 
 export async function generateModelFromApiType(): Promise<void> {
   const flutter = getFlutterInfo();

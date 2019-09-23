@@ -1,7 +1,7 @@
 import { getRootDir, ProjectType, openFile, insertLineInFile } from "./util";
 import { window, ExtensionContext, commands } from "vscode";
 import { Cmd } from "./cmd";
-import { generateModel, ServerOpts, ServerKind, generateModelFromSQLDef } from "./server_model";
+import { generateModel, ServerOpts, ServerKind, generateModelFromSQLDef, generateNewModelTypeFromModel } from "./server_model";
 
 import snakeCase = require('snake-case');
 import camelCase = require('camel-case');
@@ -16,7 +16,7 @@ export interface ServiceOpts {
 }
 
 export function setup(context: ExtensionContext) {
-  context.subscriptions.push(commands.registerCommand('extension.mainframe', async () => {
+  context.subscriptions.push(commands.registerCommand('extension.server', async () => {
     const quickPick = window.createQuickPick();
     quickPick.items = [
       new Cmd("Generate basic CRUD Service +API", () => generateCode({ name: '' })),
@@ -25,6 +25,8 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate DAO new file", () => generateModel(new ServerOpts(ServerKind.DaoNewFile))),
       new Cmd("Generate Model to API type converter", () => generateModel(new ServerOpts(ServerKind.ModelToApiType))),
       new Cmd("Generate Model from SQL definition", () => generateModelFromSQLDef(new ServerOpts(ServerKind.Model))),
+      new Cmd("Generate New Model (creator) code", () => generateModel(new ServerOpts(ServerKind.ModelNewModel))),
+      new Cmd("Generate New Model (creator) code from model", () => generateNewModelTypeFromModel()),
       new Cmd("Generate DAO update method", () => generateDaoUpdateMethod()),
       new Cmd("Generate DAO update method from model and copy to clipboard", () => copyDaoUpdateMethod(new DaoOpts(DaoKind.UpdateMethod))),
       new Cmd("Generate DAO add method from model and copy to clipboard", () => copyDaoAddMethod()),

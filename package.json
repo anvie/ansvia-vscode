@@ -5,7 +5,7 @@
     "publisher": "Ansvia",
     "repository": "https://github.com/anvie/ansvia-vscode",
     "license": "SEE LICENSE IN LICENSE",
-    "version": "0.2.9",
+    "version": "0.2.11",
     "engines": {
         "vscode": "^1.36.0",
         "node": ">=6.0.0"
@@ -20,7 +20,7 @@
     "contributes": {
         "commands": [
             {
-                "command": "extension.mainframe",
+                "command": "extension.server",
                 "title": "ANSVIA: Generate Server code"
             },
             {

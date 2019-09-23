@@ -1,5 +1,6 @@
 import { getRootDir, ProjectType, openFile, normalizeName, nameToPlural, insertLineInFile } from "./util";
-import { window, Position } from "vscode";;
+import { window, Position } from "vscode"; import { Field } from "./field";
+;
 
 const snakeCase = require('snake-case');
 const pascalCase = require('pascal-case');
@@ -9,6 +10,7 @@ export enum ServerKind {
   Model,
   DaoInline,
   DaoNewFile,
+  ModelNewModel,
   ModelToApiType
 }
 
@@ -52,7 +54,19 @@ export async function generateModel(opts: ServerOpts) {
       }) || "";
       let fields = fieldsStr.split(',').map((a) => a.trim());
       editor.edit(builder => {
-        let result = generateModelCode(name, fields);
+        let result = generateModelCode(name, fields, false);
+        builder.replace(editor.selection.anchor, result);
+      });
+      break;
+    }
+    case ServerKind.ModelNewModel: {
+      const fieldsStr = await window.showInputBox({
+        value: '',
+        placeHolder: 'Fields, eg: id:id,name:z,active:b,timestamp:dt,num:i,num:i64,keywords:z[]'
+      }) || "";
+      let fields = fieldsStr.split(',').map((a) => a.trim());
+      editor.edit(builder => {
+        let result = generateModelCode(name, fields, true);
         builder.replace(editor.selection.anchor, result);
       });
       break;
@@ -64,13 +78,13 @@ export async function generateModel(opts: ServerOpts) {
         placeHolder: 'Fields, eg: name:z,active:b,timestamp:dt,num:i,num:i64,keywords:z[]'
       }) || "";
       let fields = fieldsStr.split(',').map((a) => a.trim()).filter((a) => a.length > 0);
-      
-      if (opts.kind === ServerKind.DaoInline){
+
+      if (opts.kind === ServerKind.DaoInline) {
         editor.edit(builder => {
           let result = generateDaoCode(name, fields, opts);
           builder.replace(editor.selection.anchor, result);
         });
-      }else if (opts.kind === ServerKind.DaoNewFile){
+      } else if (opts.kind === ServerKind.DaoNewFile) {
         editor.edit(() => {
           let nameSnake = snakeCase(name);
           let result = generateDaoCode(name, fields, opts);
@@ -95,6 +109,54 @@ export async function generateModel(opts: ServerOpts) {
       break;
     }
   }
+}
+
+
+class Model {
+  name: string;
+  fields: Array<Field>;
+
+  constructor(name: string, fields: Array<Field>) {
+    this.name = name;
+    this.fields = fields;
+  }
+}
+
+function parseModel(text: string): Model {
+
+  const reName = new RegExp("pub struct (\\w*) {");
+  const reField = new RegExp("pub (\\w*): *([a-zA-Z0-9_<>:]*),?");
+
+  var name = "";
+
+  let lines = text.split('\n');
+  let fields = [];
+  // let fields = [];
+
+  for (let line of lines) {
+    var s = reName.exec(line);
+    if (s && s[1]) {
+      if (name !== "") {
+        window.showWarningMessage("Name already defined: " + name);
+        throw new Error("Name already defined" + name);
+      }
+      name = s[1].trim();
+      continue;
+    }
+    if (name.length > 0) {
+      s = reField.exec(line);
+      if (s === null) {
+        continue;
+      }
+      // console.log("s: " + s);
+      // console.log("s[2]: " + s[2]);
+      if (s[1]) {
+        fields.push(new Field(s[1], s[2]));
+      }
+    }
+  }
+
+  return new Model(name, fields);
 }
 
 
@@ -157,9 +219,9 @@ export async function generateModelFromSQLDef(_: ServerOpts) {
         if (isPlural) {
           fields.push(`${field}:i[]`);
         } else {
-          if (field === 'id' || field.endsWith('_id')){
+          if (field === 'id' || field.endsWith('_id')) {
             fields.push(`${field}:id`);
-          }else{
+          } else {
             fields.push(`${field}:i`);
           }
         }
@@ -207,9 +269,7 @@ export async function generateModelFromSQLDef(_: ServerOpts) {
     return;
   }
 
-
-
-  const generatedCode = generateModelCode(name, fields);
+  const generatedCode = generateModelCode(name, fields, false);
 
   var modelFilePath = `${rootDir}/src/models.rs`;
 
@@ -224,52 +284,112 @@ function generateModelToApiConverter(): string {
   const text = editor.document.getText(editor.selection);
   // console.log("selected text: " + text);
 
-  const reName = new RegExp("pub struct (\\w*) {");
-  const reField = new RegExp("pub (\\w*): *([a-zA-Z0-9_<>:]*),?");
+  let model = parseModel(text);
 
-  var name = "";
+  let namePascal = pascalCase(model.name);
 
-  let lines = text.split('\n');
   let newLines = [];
-  // let fields = [];
 
-  for (let line of lines) {
-    var s = reName.exec(line);
-    if (s && s[1]) {
-      if (name !== "") {
-        window.showWarningMessage("Name already defined: " + name);
-        return "";
-      }
-      name = s[1].trim();
-      const namePascal = pascalCase(name);
-      newLines.push(`impl ToApiType<${namePascal}> for models::${namePascal} {`);
-      newLines.push(`    fn to_api_type(&self, conn: &PgConnection) -> ${namePascal} {`);
-      newLines.push(`        ${namePascal} {`);
-      continue;
-    }
-    if (name.length > 0) {
-      s = reField.exec(line);
-      if (s === null) {
-        continue;
-      }
-      // console.log("s: " + s);
-      // console.log("s[2]: " + s[2]);
-      if (s[1]) {
-        if (s[2].trim() === "String") {
-          newLines.push(`            ${s[1]}: self.${s[1]}.to_owned(),`);
-        } else if (s[2].startsWith("Vec")) {
-          newLines.push(`            ${s[1]}: self.${s[1]}.clone(),`);
-        } else {
-          newLines.push(`            ${s[1]}: self.${s[1]},`);
-        }
+  newLines.push(`impl ToApiType<${namePascal}> for models::${namePascal} {`);
+  newLines.push(`    fn to_api_type(&self, conn: &PgConnection) -> ${namePascal} {`);
+  newLines.push(`        ${namePascal} {`);
+
+  for (let field of model.fields) {
+    if (field.name) {
+      if (field.ty.trim() === "String") {
+        newLines.push(`            ${field.name}: self.${field.name}.to_owned(),`);
+      } else if (field.ty.startsWith("Vec")) {
+        newLines.push(`            ${field.name}: self.${field.name}.clone(),`);
+      } else {
+        newLines.push(`            ${field.name}: self.${field.name},`);
       }
     }
   }
+
+  // // const reName = new RegExp("pub struct (\\w*) {");
+  // // const reField = new RegExp("pub (\\w*): *([a-zA-Z0-9_<>:]*),?");
+
+  // // var name = "";
+
+  // // let lines = text.split('\n');
+
+  // // let fields = [];
+
+  // for (let line of lines) {
+  //   var s = reName.exec(line);
+  //   if (s && s[1]) {
+  //     if (name !== "") {
+  //       window.showWarningMessage("Name already defined: " + name);
+  //       return "";
+  //     }
+  //     name = s[1].trim();
+  //     const namePascal = pascalCase(name);
+  //     newLines.push(`impl ToApiType<${namePascal}> for models::${namePascal} {`);
+  //     newLines.push(`    fn to_api_type(&self, conn: &PgConnection) -> ${namePascal} {`);
+  //     newLines.push(`        ${namePascal} {`);
+  //     continue;
+  //   }
+  //   if (name.length > 0) {
+  //     s = reField.exec(line);
+  //     if (s === null) {
+  //       continue;
+  //     }
+  //     // console.log("s: " + s);
+  //     // console.log("s[2]: " + s[2]);
+  //     if (s[1]) {
+  //       if (s[2].trim() === "String") {
+  //         newLines.push(`            ${s[1]}: self.${s[1]}.to_owned(),`);
+  //       } else if (s[2].startsWith("Vec")) {
+  //         newLines.push(`            ${s[1]}: self.${s[1]}.clone(),`);
+  //       } else {
+  //         newLines.push(`            ${s[1]}: self.${s[1]},`);
+  //       }
+  //     }
+  //   }
+  // }
   newLines.push('        }');
   newLines.push('    }');
   newLines.push('}');
 
   return newLines.join('\n');
+}
+
+export async function generateNewModelTypeFromModel(){
+
+  const editor = window.activeTextEditor!;
+
+  const text = editor.document.getText(editor.selection);
+
+  let model = parseModel(text);
+
+  let namePascal = pascalCase(model.name);
+  let nameSnake = snakeCase(model.name);
+
+  let newLines:Array<string> = [];
+
+  newLines.push(`#[derive(Insertable)]
+#[table_name = "${nameSnake}s"]
+struct New${namePascal}<'a> {`);
+
+  for (let field of model.fields) {
+    if (field.ty === "String"){
+      newLines.push(`    ${field.name}: &'a str`);
+    }else if (field.ty === "str"){
+      newLines.push(`    ${field.name}: &'a str`);
+    }else if (field.ty.startsWith("Vec")){
+      newLines.push(`    ${field.name}: &'a ${field.ty}`);
+    }else{
+      newLines.push(`    ${field.name}: ${field.ty}`);
+    }
+  }
+
+  newLines.push('}');
+
+  editor.edit(builder => {
+    let nextPos = editor.selection.end.line + 1;
+    builder.replace(new Position(nextPos, 0), newLines.join('\n') + '\n');
+  });
+  
 }
 
 function generateDaoCode(name: string, fields: string[], opts: ServerOpts) {
@@ -348,7 +468,7 @@ function generateDaoCode(name: string, fields: string[], opts: ServerOpts) {
   var newLines = [];
 
 
-  if (opts.kind === ServerKind.DaoNewFile){
+  if (opts.kind === ServerKind.DaoNewFile) {
     newLines.push(`//! Dao implementation for ${name}
 //! 
 
@@ -408,7 +528,7 @@ impl<'a> ${namePascal}Dao<'a> {
   return newLines.join('\n');
 }
 
-function generateModelCode(name: String, fields: String[]) {
+function generateModelCode(name: String, fields: String[], newMode: boolean) {
   //   const editor = window.activeTextEditor!;
   const namePascal = pascalCase(name);
   //   const nameSnake = snakeCase(name);
@@ -417,7 +537,13 @@ function generateModelCode(name: String, fields: String[]) {
 
   for (let _field of fields) {
     var newFieldName = _field.trim();
-    var ty = "String";
+    var ty = "";
+
+    if (newMode) {
+      ty = "&'a str";
+    } else {
+      ty = "String";
+    }
 
     let s = _field.split(':');
 
@@ -428,11 +554,19 @@ function generateModelCode(name: String, fields: String[]) {
 
     switch (s[1]) {
       case 'id': {
-        ty = "ID";
+        if (newMode) {
+          ty = "ID";
+        } else {
+          ty = "ID";
+        }
         break;
       }
       case 'z': {
-        ty = "String";
+        if (newMode) {
+          ty = "&'a str";
+        } else {
+          ty = "String";
+        }
         break;
       }
       case 'b': {
@@ -457,17 +591,29 @@ function generateModelCode(name: String, fields: String[]) {
         break;
       }
       case 'z[]': {
-        ty = "Vec<String>";
+        if (newMode) {
+          ty = "&'a Vec<String>";
+        } else {
+          ty = "Vec<String>";
+        }
         break;
       }
       case 'i[]':
       case 'i32[]': {
-        ty = "Vec<i32>";
+        if (newMode) {
+          ty = "&'a Vec<i32>";
+        } else {
+          ty = "Vec<i32>";
+        }
         break;
       }
       case 'i[]':
       case 'i64[]': {
-        ty = "Vec<i64>";
+        if (newMode) {
+          ty = "&'a Vec<i64>";
+        } else {
+          ty = "Vec<i64>";
+        }
         break;
       }
     }
@@ -480,11 +626,20 @@ function generateModelCode(name: String, fields: String[]) {
   }
 
   var newLines = [];
-  newLines.push(`
+
+  if (newMode) {
+    newLines.push(`
+#[doc(hidden)]
+#[derive(Queryable, Serialize)]
+pub struct ${namePascal}<'a> {
+    `.trim());
+  } else {
+    newLines.push(`
 #[doc(hidden)]
 #[derive(Queryable, Serialize)]
 pub struct ${namePascal} {
     `.trim());
+  }
 
   for (let fld of newFields) {
     newLines.push(`    pub ${fld[0]}: ${fld[1]},`);
