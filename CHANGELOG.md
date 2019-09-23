@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.2.11
+
+- Added new model struct generator typed and convert.
+- Bug fix: activation error when no error sync gen config.
+
 ## 0.2.9
 
 - Auto generate error code from backend -> frontends.
