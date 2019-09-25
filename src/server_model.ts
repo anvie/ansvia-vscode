@@ -1,6 +1,6 @@
 import { getRootDir, ProjectType, openFile, normalizeName, nameToPlural, insertLineInFile } from "./util";
 import { window, Position } from "vscode"; import { Field } from "./field";
-;
+import { getExtensionConfig } from "./extension";
 
 const snakeCase = require('snake-case');
 const pascalCase = require('pascal-case');
@@ -208,10 +208,21 @@ export async function generateModelFromSQLDef(_: ServerOpts) {
 
 
     switch (sqlTy) {
+      case "smallint": {
+        if (isPlural) {
+          fields.push(`${field}:i16[]`);
+        } else {
+          if (field === 'id' || field.endsWith('_id')) {
+            fields.push(`${field}:id`);
+          } else {
+            fields.push(`${field}:i16`);
+          }
+        }
+        break;
+      }
       case "bigserial":
       case "bigint":
       case "int":
-      case "smallint":
       case "integer":
       case "numeric":
       case "decimal":
@@ -271,7 +282,18 @@ export async function generateModelFromSQLDef(_: ServerOpts) {
 
   const generatedCode = generateModelCode(name, fields, false);
 
-  var modelFilePath = `${rootDir}/src/models.rs`;
+  let extConfig = getExtensionConfig();
+
+  console.log("extConfig:");
+  console.log(extConfig);
+
+  var modelFilePath = extConfig.serverModelFile();
+  console.log("modelFilePath: " + modelFilePath);
+
+  if (!fs.existsSync(modelFilePath)) {
+    // for backward compatibility
+    modelFilePath = `${rootDir}/src/models.rs`;
+  }
 
   fs.appendFileSync(modelFilePath, generatedCode + '\n');
   openFile(modelFilePath);
@@ -354,7 +376,7 @@ function generateModelToApiConverter(): string {
   return newLines.join('\n');
 }
 
-export async function generateNewModelTypeFromModel(){
+export async function generateNewModelTypeFromModel() {
 
   const editor = window.activeTextEditor!;
 
@@ -365,21 +387,25 @@ export async function generateNewModelTypeFromModel(){
   let namePascal = pascalCase(model.name);
   let nameSnake = snakeCase(model.name);
 
-  let newLines:Array<string> = [];
+  let newLines: Array<string> = [];
 
   newLines.push(`#[derive(Insertable)]
 #[table_name = "${nameSnake}s"]
 struct New${namePascal}<'a> {`);
 
   for (let field of model.fields) {
-    if (field.ty === "String"){
-      newLines.push(`    ${field.name}: &'a str`);
-    }else if (field.ty === "str"){
-      newLines.push(`    ${field.name}: &'a str`);
-    }else if (field.ty.startsWith("Vec")){
-      newLines.push(`    ${field.name}: &'a ${field.ty}`);
-    }else{
-      newLines.push(`    ${field.name}: ${field.ty}`);
+    if (field.name === "id") {
+      // skip id name
+      continue;
+    }
+    if (field.ty === "String") {
+      newLines.push(`    ${field.name}: &'a str,`);
+    } else if (field.ty === "str") {
+      newLines.push(`    ${field.name}: &'a str,`);
+    } else if (field.ty.startsWith("Vec")) {
+      newLines.push(`    ${field.name}: &'a ${field.ty},`);
+    } else {
+      newLines.push(`    ${field.name}: ${field.ty},`);
     }
   }
 
@@ -389,7 +415,7 @@ struct New${namePascal}<'a> {`);
     let nextPos = editor.selection.end.line + 1;
     builder.replace(new Position(nextPos, 0), newLines.join('\n') + '\n');
   });
-  
+
 }
 
 function generateDaoCode(name: string, fields: string[], opts: ServerOpts) {
@@ -582,6 +608,10 @@ function generateModelCode(name: String, fields: String[], newMode: boolean) {
         ty = "i32";
         break;
       }
+      case 'i16': {
+        ty = "i16";
+        break;
+      }
       case 'i64': {
         ty = "i64";
         break;
@@ -607,7 +637,14 @@ function generateModelCode(name: String, fields: String[], newMode: boolean) {
         }
         break;
       }
-      case 'i[]':
+      case 'i16[]': {
+        if (newMode) {
+          ty = "&'a Vec<i16>";
+        } else {
+          ty = "Vec<i16>";
+        }
+        break;
+      }
       case 'i64[]': {
         if (newMode) {
           ty = "&'a Vec<i64>";

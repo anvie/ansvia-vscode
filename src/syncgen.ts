@@ -2,7 +2,7 @@ import { workspace, TextDocument, window } from "vscode";
 
 import fs = require('fs');
 import camelCase = require("camel-case");
-var yaml = require('js-yaml');
+import config = require('./config');
 
 
 export function setupSyncGen() {
@@ -12,14 +12,15 @@ export function setupSyncGen() {
     return;
   }
 
-  var config = yaml.safeLoad(fs.readFileSync(`${rootDir}/ansvia-vscode.yaml`));
-  console.log(config);
+  // var config = yaml.safeLoad(fs.readFileSync(`${rootDir}/ansvia-vscode.yaml`));
+  let conf = config.parse();
+  console.log(conf);
 
-  if (!config){
+  if (!conf){
     return;
   }
 
-  var sync_gen = config['sync_gen'];
+  var sync_gen = conf['sync_gen'];
 
   if (sync_gen) {
     const c = sync_gen['error_code'];

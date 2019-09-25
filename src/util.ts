@@ -13,7 +13,7 @@ export enum ProjectType {
   Web
 }
 
-export function getRootDir(type: ProjectType): String | null {
+export function getRootDir(type: ProjectType): string | null {
   if (!workspace.workspaceFolders) {
     window.showInformationMessage("No project opened, please open project first.");
     return null;
