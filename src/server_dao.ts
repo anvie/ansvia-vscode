@@ -1,4 +1,4 @@
-import { getRootDir, ProjectType, openFile, normalizeName, nameToPlural, parseFieldsStr, shortcutTypeToRustType } from "./util";
+import { getRootDir, ProjectType, openFile, normalizeName, nameToPlural, parseFieldsStr, shortcutTypeToRustType, insertLineInFile } from "./util";
 import { window, Position } from "vscode";
 
 import { ModelStruct } from "./rust_parser";
@@ -7,6 +7,8 @@ import snakeCase = require('snake-case');
 import pascalCase = require('pascal-case');
 import fs = require('fs');
 import clipboardy = require('clipboardy');
+import { parseModel } from "./server_model";
+import { Field } from "./field";
 
 export enum DaoKind {
   UpdateMethod
@@ -18,6 +20,235 @@ export class DaoOpts {
     this.kind = kind;
   }
 }
+
+export async function generateDao(newFile:boolean){
+  let rootDir = getRootDir(ProjectType.Server);
+  const editor = window.activeTextEditor!;
+
+  let name = await window.showInputBox({
+    value: '',
+    placeHolder: 'Service name, example: Account'
+  }) || "";
+
+  if (name.length === 0) {
+    window.showInformationMessage("No name");
+    return;
+  }
+
+  const fieldsStr = await window.showInputBox({
+    value: '',
+    placeHolder: 'Fields, eg: name:z,active:b,timestamp:dt,num:i,num:i64,keywords:z[]'
+  }) || "";
+  let fields = parseFieldsStr(fieldsStr);
+
+  if (!newFile) {
+    editor.edit(builder => {
+      let result = generateDaoCode(name, fields, new GenDaoOpts(false, []));
+      builder.replace(editor.selection.anchor, result);
+    });
+  } else {
+    editor.edit(() => {
+      let nameSnake = snakeCase(name);
+      let result = generateDaoCode(name, fields, new GenDaoOpts(false, []));
+      let daoFile = `${rootDir}/src/${nameSnake}_dao.rs`;
+      fs.writeFileSync(daoFile, result);
+
+      // update lib.rs files
+      // add pub mod into mod.rs file
+      insertLineInFile(`${rootDir}/src/lib.rs`, "pub mod", `pub mod ${nameSnake}_dao;`);
+      insertLineInFile(`${rootDir}/src/dao.rs`, "pub use", `pub use crate::${nameSnake}_dao::${pascalCase(name)}Dao;`);
+      openFile(daoFile);
+    });
+  }
+}
+
+export async function generateDaoFromModel(newFile:boolean) {
+  let rootDir = getRootDir(ProjectType.Server);
+
+  const editor = window.activeTextEditor!;
+
+  const text = editor.document.getText(editor.selection);
+  let model = parseModel(text);
+
+  if (!newFile) {
+    editor.edit(builder => {
+      let result = generateDaoCode(model.name, model.fields, new GenDaoOpts(false, ["id", "ts"]));
+      builder.replace(editor.selection.anchor, result);
+    });
+  } else {
+    editor.edit(() => {
+      let nameSnake = snakeCase(model.name);
+      let result = generateDaoCode(model.name, model.fields, new GenDaoOpts(true, ["id", "ts"]) );
+      let daoFile = `${rootDir}/src/${nameSnake}_dao.rs`;
+      fs.writeFileSync(daoFile, result);
+
+      // update lib.rs files
+      // add pub mod into mod.rs file
+      insertLineInFile(`${rootDir}/src/lib.rs`, "pub mod", `pub mod ${nameSnake}_dao;`);
+      insertLineInFile(`${rootDir}/src/dao.rs`, "pub use", `pub use crate::${nameSnake}_dao::${pascalCase(model.name)}Dao;`);
+      openFile(daoFile);
+    });
+  }
+}
+
+export class GenDaoOpts {
+  newFile:boolean;
+  excludeFields: string[];
+  constructor(newFile:boolean, excludeFields:string[]){
+    this.newFile = newFile;
+    this.excludeFields = excludeFields;
+  }
+}
+
+export function generateDaoCode(name: string, fields: Field[], opts: GenDaoOpts) {
+  name = normalizeName(name);
+  const namePascal = pascalCase(name);
+  const nameSnake = snakeCase(name);
+
+  var newFields = [];
+
+  for (let _field of fields) {
+    var newFieldName = _field.name.trim();
+
+    if (opts.excludeFields.includes(newFieldName)){
+      continue;
+    }
+
+    // var ty = "&'a str";
+
+    var ty = shortcutTypeToRustType(_field.ty);
+
+    if (ty === "String"){
+      ty = "&'a str";
+    }else if (ty === "Vec<String>"){
+      ty = "&'a Vec<&str>";
+    }
+
+    // let s = _field.split(':');
+
+    // if (s.length === 1) {
+    //   s.push('z');
+    // }
+    // newFieldName = s[0];
+
+    // switch (_field.ty) {
+    //   case 'id': {
+    //     ty = "ID";
+    //     break;
+    //   }
+    //   case 'z': {
+    //     ty = "&'a str";
+    //     break;
+    //   }
+    //   case 'b': {
+    //     ty = "bool";
+    //     break;
+    //   }
+    //   case 'dt': {
+    //     ty = "NaiveDateTime";
+    //     break;
+    //   }
+    //   case 'i':
+    //   case 'i32': {
+    //     ty = "i32";
+    //     break;
+    //   }
+    //   case 'i64': {
+    //     ty = "i64";
+    //     break;
+    //   }
+    //   case 'd': {
+    //     ty = "f64";
+    //     break;
+    //   }
+    //   case 'z[]': {
+    //     ty = "&'a Vec<String>";
+    //     break;
+    //   }
+    //   case 'i[]':
+    //   case 'i32[]': {
+    //     ty = "Vec<i32>";
+    //     break;
+    //   }
+    //   case 'i[]':
+    //   case 'i64[]': {
+    //     ty = "Vec<i64>";
+    //     break;
+    //   }
+    // }
+
+    // console.log("newFieldName: " + newFieldName);
+
+    const newFieldNameSnake = snakeCase(newFieldName);
+
+    newFields.push([newFieldNameSnake, ty]);
+  }
+
+  let tableName = nameToPlural(nameSnake);
+
+  var newLines = [];
+
+
+  if (opts.newFile) {
+    newLines.push(`//! Dao implementation for ${name}
+//! 
+
+use chrono::prelude::*;
+use diesel::prelude::*;
+
+use crate::{ID, result::Result, models::${namePascal}, schema::${tableName}};
+`);
+  }
+
+  newLines.push(`
+#[derive(Insertable)]
+#[table_name = "${tableName}"]
+struct New${namePascal}<'a> {`);
+
+  for (let fld of newFields) {
+    newLines.push(`    pub ${fld[0]}: ${fld[1]},`);
+  }
+
+  newLines.push('}\n');
+
+  newLines.push(`
+/// Data Access Object for ${name}
+#[derive(Dao)]
+#[table_name="${tableName}"]
+pub struct ${namePascal}Dao<'a> {
+    db: &'a PgConnection,
+}
+`);
+
+  newLines.push(`
+impl<'a> ${namePascal}Dao<'a> {
+  /// Create new ${namePascal}
+  pub fn create(&self,
+`.trim());
+
+  for (let fld of newFields) {
+    newLines.push(`      ${fld[0]}: ${fld[1]},`);
+  }
+  newLines.push(`    ) -> Result<${namePascal}> {`);
+  newLines.push(`    use crate::schema::${tableName}::{self, dsl};`);
+
+  newLines.push(`
+    diesel::insert_into(${tableName}::table)
+        .values(&New${namePascal} {`);
+
+  for (let fld of newFields) {
+    newLines.push(`            ${fld[0]},`);
+  }
+
+  newLines.push(`        })
+        .get_result(self.db)
+        .map_err(From::from)
+  }
+}`);
+
+  return newLines.join('\n');
+}
+
 
 export async function generateDaoUpdateMethod() {
   const name = await window.showInputBox({

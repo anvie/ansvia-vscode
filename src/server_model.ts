@@ -8,8 +8,8 @@ const fs = require('fs');
 
 export enum ServerKind {
   Model,
-  DaoInline,
-  DaoNewFile,
+  // DaoInline,
+  // DaoNewFile,
   ModelNewModel,
   ModelToApiType
 }
@@ -71,35 +71,35 @@ export async function generateModel(opts: ServerOpts) {
       });
       break;
     }
-    case ServerKind.DaoInline:
-    case ServerKind.DaoNewFile: {
-      const fieldsStr = await window.showInputBox({
-        value: '',
-        placeHolder: 'Fields, eg: name:z,active:b,timestamp:dt,num:i,num:i64,keywords:z[]'
-      }) || "";
-      let fields = fieldsStr.split(',').map((a) => a.trim()).filter((a) => a.length > 0);
+    // case ServerKind.DaoInline:
+    // case ServerKind.DaoNewFile: {
+      // const fieldsStr = await window.showInputBox({
+      //   value: '',
+      //   placeHolder: 'Fields, eg: name:z,active:b,timestamp:dt,num:i,num:i64,keywords:z[]'
+      // }) || "";
+      // let fields = fieldsStr.split(',').map((a) => a.trim()).filter((a) => a.length > 0);
 
-      if (opts.kind === ServerKind.DaoInline) {
-        editor.edit(builder => {
-          let result = generateDaoCode(name, fields, opts);
-          builder.replace(editor.selection.anchor, result);
-        });
-      } else if (opts.kind === ServerKind.DaoNewFile) {
-        editor.edit(() => {
-          let nameSnake = snakeCase(name);
-          let result = generateDaoCode(name, fields, opts);
-          let daoFile = `${rootDir}/src/${nameSnake}_dao.rs`;
-          fs.writeFileSync(daoFile, result);
+      // if (opts.kind === ServerKind.DaoInline) {
+      //   editor.edit(builder => {
+      //     let result = generateDaoCode(name, fields, opts);
+      //     builder.replace(editor.selection.anchor, result);
+      //   });
+      // } else if (opts.kind === ServerKind.DaoNewFile) {
+      //   editor.edit(() => {
+      //     let nameSnake = snakeCase(name);
+      //     let result = generateDaoCode(name, fields, opts);
+      //     let daoFile = `${rootDir}/src/${nameSnake}_dao.rs`;
+      //     fs.writeFileSync(daoFile, result);
 
-          // update lib.rs files
-          // add pub mod into mod.rs file
-          insertLineInFile(`${rootDir}/src/lib.rs`, "pub mod", `pub mod ${nameSnake}_dao;`);
-          insertLineInFile(`${rootDir}/src/dao.rs`, "pub use", `pub use crate::${nameSnake}_dao::${pascalCase(name)}Dao;`);
-          openFile(daoFile);
-        });
-      }
-      break;
-    }
+      //     // update lib.rs files
+      //     // add pub mod into mod.rs file
+      //     insertLineInFile(`${rootDir}/src/lib.rs`, "pub mod", `pub mod ${nameSnake}_dao;`);
+      //     insertLineInFile(`${rootDir}/src/dao.rs`, "pub use", `pub use crate::${nameSnake}_dao::${pascalCase(name)}Dao;`);
+      //     openFile(daoFile);
+      //   });
+      // }
+      // break;
+    // }
     case ServerKind.ModelToApiType: {
       editor.edit(builder => {
         let result = generateModelToApiConverter();
@@ -122,7 +122,7 @@ class Model {
   }
 }
 
-function parseModel(text: string): Model {
+export function parseModel(text: string): Model {
 
   const reName = new RegExp("pub struct (\\w*) {");
   const reField = new RegExp("pub (\\w*): *([a-zA-Z0-9_<>:]*),?");
@@ -416,142 +416,6 @@ struct New${namePascal}<'a> {`);
     builder.replace(new Position(nextPos, 0), newLines.join('\n') + '\n');
   });
 
-}
-
-function generateDaoCode(name: string, fields: string[], opts: ServerOpts) {
-  name = normalizeName(name);
-  const namePascal = pascalCase(name);
-  const nameSnake = snakeCase(name);
-
-  var newFields = [];
-
-  for (let _field of fields) {
-    var newFieldName = _field.trim();
-    var ty = "&'a str";
-
-    let s = _field.split(':');
-
-    if (s.length === 1) {
-      s.push('z');
-    }
-    newFieldName = s[0];
-
-    switch (s[1]) {
-      case 'id': {
-        ty = "ID";
-        break;
-      }
-      case 'z': {
-        ty = "&'a str";
-        break;
-      }
-      case 'b': {
-        ty = "bool";
-        break;
-      }
-      case 'dt': {
-        ty = "NaiveDateTime";
-        break;
-      }
-      case 'i':
-      case 'i32': {
-        ty = "i32";
-        break;
-      }
-      case 'i64': {
-        ty = "i64";
-        break;
-      }
-      case 'd': {
-        ty = "f64";
-        break;
-      }
-      case 'z[]': {
-        ty = "&'a Vec<String>";
-        break;
-      }
-      case 'i[]':
-      case 'i32[]': {
-        ty = "Vec<i32>";
-        break;
-      }
-      case 'i[]':
-      case 'i64[]': {
-        ty = "Vec<i64>";
-        break;
-      }
-    }
-
-    // console.log("newFieldName: " + newFieldName);
-
-    const newFieldNameSnake = snakeCase(newFieldName);
-
-    newFields.push([newFieldNameSnake, ty]);
-  }
-
-  let tableName = nameToPlural(nameSnake);
-
-  var newLines = [];
-
-
-  if (opts.kind === ServerKind.DaoNewFile) {
-    newLines.push(`//! Dao implementation for ${name}
-//! 
-
-use chrono::prelude::*;
-use diesel::prelude::*;
-
-use crate::{ID, result::Result, models::${namePascal}, schema::${tableName}};
-`);
-  }
-
-  newLines.push(`
-#[derive(Insertable)]
-#[table_name = "${tableName}"]
-struct New${namePascal}<'a> {`);
-
-  for (let fld of newFields) {
-    newLines.push(`    pub ${fld[0]}: ${fld[1]},`);
-  }
-
-  newLines.push('}\n');
-
-  newLines.push(`
-/// Data Access Object for ${name}
-#[derive(Dao)]
-#[table_name="${tableName}"]
-pub struct ${namePascal}Dao<'a> {
-    db: &'a PgConnection,
-}
-`);
-
-  newLines.push(`
-impl<'a> ${namePascal}Dao<'a> {
-  /// Create new ${namePascal}
-  pub fn create(&self,
-`.trim());
-
-  for (let fld of newFields) {
-    newLines.push(`      ${fld[0]}: ${fld[1]},`);
-  }
-  newLines.push(`    ) -> Result<${namePascal}> {`);
-  newLines.push(`    use crate::schema::${tableName}::{self, dsl};`);
-
-  newLines.push(`
-    diesel::insert_into(${tableName}::table)
-        .values(&New${namePascal} {`);
-
-  for (let fld of newFields) {
-    newLines.push(`            ${fld[0]},`);
-  }
-
-  newLines.push(`        })
-        .get_result(self.db)
-        .map_err(From::from)
-  }
-}`);
-
-  return newLines.join('\n');
 }
 
 function generateModelCode(name: String, fields: String[], newMode: boolean) {

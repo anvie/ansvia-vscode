@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.2.12
+
+- Added Generate DAO code from model.
+- Some optimization.
+
 ## 0.2.11
 
 - Added new model struct generator typed and convert.

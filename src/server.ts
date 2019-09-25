@@ -7,7 +7,7 @@ import snakeCase = require('snake-case');
 import camelCase = require('camel-case');
 import pascalCase = require('pascal-case');
 import fs = require('fs');
-import { copyDaoUpdateMethod, DaoOpts, DaoKind, copyDaoAddMethod, generateDaoUpdateMethod } from "./server_dao";
+import { copyDaoUpdateMethod, DaoOpts, DaoKind, copyDaoAddMethod, generateDaoUpdateMethod, generateDao, generateDaoFromModel } from "./server_dao";
 import { generateApiUpdateMethod } from "./server_api";
 
 
@@ -21,8 +21,9 @@ export function setup(context: ExtensionContext) {
     quickPick.items = [
       new Cmd("Generate basic CRUD Service +API", () => generateCode({ name: '' })),
       new Cmd("Generate model", () => generateModel(new ServerOpts(ServerKind.Model))),
-      new Cmd("Generate DAO inline", () => generateModel(new ServerOpts(ServerKind.DaoInline))),
-      new Cmd("Generate DAO new file", () => generateModel(new ServerOpts(ServerKind.DaoNewFile))),
+      new Cmd("Generate DAO inline", () => generateDao(false) ),
+      new Cmd("Generate DAO new file", () => generateDao(true)),
+      new Cmd("Generate DAO from model new file", () => generateDaoFromModel(true) ),
       new Cmd("Generate Model to API type converter", () => generateModel(new ServerOpts(ServerKind.ModelToApiType))),
       new Cmd("Generate Model from SQL definition", () => generateModelFromSQLDef(new ServerOpts(ServerKind.Model))),
       new Cmd("Generate New Model (creator) code", () => generateModel(new ServerOpts(ServerKind.ModelNewModel))),
