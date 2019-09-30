@@ -152,6 +152,25 @@ export function shortcutTypeToRustType(ty: string): string {
   }
 }
 
+export function shortcutTypeToFlutterType(ty: string): string {
+  switch(ty){
+    case "z": return "String";
+    case "id": return "int";
+    case "i": return "int";
+    case "d": return "double";
+    case "b": return "bool";
+    case "dt": return "String";
+    case "z[]": return "List<String>";
+    case "id[]": return "List<int>";
+    case "i[]": return "List<int>";
+    case "d[]": return "List<double>";
+    case "b[]": return "List<bool>";
+    case "dt[]": return "List<String>";
+    default:
+      return ty;
+  }
+}
+
 
 export function insertLineInFile(filePath:string, insertAfterPattern: string, definition:string){
   const modData = fs.readFileSync(filePath).toString();

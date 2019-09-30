@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.2.13
+
+- Added code generator for Class variables and constructor, CVC1, CVC2, CVC3.
+- Minor improvements.
+
 ## 0.2.12
 
 - Added Generate DAO code from model.
