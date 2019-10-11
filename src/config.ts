@@ -10,7 +10,11 @@ export function parse() {
     return;
   }
 
-  var config = yaml.safeLoad(fs.readFileSync(`${rootDir}/ansvia-vscode.yaml`));
+  let ansviaVsCodeConfFile = `${rootDir}/ansvia-vscode.yaml`;
+  if (!fs.existsSync(ansviaVsCodeConfFile)){
+      return;
+  }
+  var config = yaml.safeLoad(fs.readFileSync(ansviaVsCodeConfFile));
   console.log(config);
 
   if (!config) {

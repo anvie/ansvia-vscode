@@ -61,8 +61,14 @@ export function getFlutterInfo(): FlutterInfo | null {
 
   console.log("rootDir: " + rootDir);
 
+  let pubspec = `${rootDir}/pubspec.yaml`;
+  if (!fs.existsSync(pubspec)){
+      window.showWarningMessage("Not a Flutter project");
+      return null;
+  }
+
   // get project name
-  var project = yaml.safeLoad(fs.readFileSync(`${rootDir}/pubspec.yaml`));
+  var project = yaml.safeLoad(fs.readFileSync(pubspec));
 
   console.log(project);
   console.log("project.name: " + project['name']);
