@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.2.15
+
+- Support for project without ansvia-vscode.yaml configuration file.
+
 ## 0.2.13
 
 - Added code generator for Class variables and constructor, CVC1, CVC2, CVC3.
