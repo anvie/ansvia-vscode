@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.2.16
+
+- [Server] Fixup table name in update method generator.
+
 ## 0.2.15
 
 - Support for project without ansvia-vscode.yaml configuration file.
