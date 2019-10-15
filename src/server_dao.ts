@@ -265,6 +265,7 @@ export async function generateDaoUpdateMethod() {
   if (tableName === ""){
     return;
   }
+  let tableNameSnake = snakeCase(tableName);
   let nameSnake = snakeCase(name);
   const fieldsStr = await window.showInputBox({
     value: '',
@@ -287,8 +288,8 @@ export async function generateDaoUpdateMethod() {
       newLines.push(`        ${field.name}: ${shortcutTypeToRustType(field.ty)},`);
     }
     newLines.push(`        ) -> Result<bool> {`);
-    newLines.push(`        use crate::schema::${snakeCase(tableName)}s::{self, dsl};`);
-    newLines.push(`        diesel::update(dsl::products.filter(dsl::id.eq(id)))
+    newLines.push(`        use crate::schema::${tableNameSnake}::{self, dsl};`);
+    newLines.push(`        diesel::update(dsl::${tableNameSnake}.filter(dsl::id.eq(id)))
             .set((`);
     
     for (let field of fields){
