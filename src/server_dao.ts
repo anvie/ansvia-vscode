@@ -121,63 +121,8 @@ export function generateDaoCode(name: string, fields: Field[], opts: GenDaoOpts)
     if (ty === "String"){
       ty = "&'a str";
     }else if (ty === "Vec<String>"){
-      ty = "&'a Vec<&str>";
+      ty = "&'a Vec<&'a str>";
     }
-
-    // let s = _field.split(':');
-
-    // if (s.length === 1) {
-    //   s.push('z');
-    // }
-    // newFieldName = s[0];
-
-    // switch (_field.ty) {
-    //   case 'id': {
-    //     ty = "ID";
-    //     break;
-    //   }
-    //   case 'z': {
-    //     ty = "&'a str";
-    //     break;
-    //   }
-    //   case 'b': {
-    //     ty = "bool";
-    //     break;
-    //   }
-    //   case 'dt': {
-    //     ty = "NaiveDateTime";
-    //     break;
-    //   }
-    //   case 'i':
-    //   case 'i32': {
-    //     ty = "i32";
-    //     break;
-    //   }
-    //   case 'i64': {
-    //     ty = "i64";
-    //     break;
-    //   }
-    //   case 'd': {
-    //     ty = "f64";
-    //     break;
-    //   }
-    //   case 'z[]': {
-    //     ty = "&'a Vec<String>";
-    //     break;
-    //   }
-    //   case 'i[]':
-    //   case 'i32[]': {
-    //     ty = "Vec<i32>";
-    //     break;
-    //   }
-    //   case 'i[]':
-    //   case 'i64[]': {
-    //     ty = "Vec<i64>";
-    //     break;
-    //   }
-    // }
-
-    // console.log("newFieldName: " + newFieldName);
 
     const newFieldNameSnake = snakeCase(newFieldName);
 
