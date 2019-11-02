@@ -251,17 +251,17 @@
     },
     "Build Rust model struct": {
         "body": [
-          "#[doc(hidden)]",
-          "#[derive(Queryable, Serialize)]",
-          "pub struct ${1:Name} {",
-          "    pub id: ID,",
-          "    ${2:pub name: String,}",
-          "    ${3:pub labels: Vec<String>,}",
-          "    pub ts: NaiveDateTime",
-          "}",
-          ""
+            "#[doc(hidden)]",
+            "#[derive(Queryable, Serialize)]",
+            "pub struct ${1:Name} {",
+            "    pub id: ID,",
+            "    ${2:pub name: String,}",
+            "    ${3:pub labels: Vec<String>,}",
+            "    pub ts: NaiveDateTime",
+            "}",
+            ""
         ],
         "prefix": "model",
         "description": "Build Rust model struct"
-      }
+    }
 }
