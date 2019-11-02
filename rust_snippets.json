@@ -1,0 +1,267 @@
+{
+    "Write derive(Serialize)": {
+        "scope": "rust",
+        "prefix": "derser",
+        "body": [
+            "#[derive(Serialize)]"
+        ],
+        "description": "Create derive decorator"
+    },
+    "Write derive(Deserialize)": {
+        "scope": "rust",
+        "prefix": "derdes",
+        "body": [
+            "#[derive(Deserialize)]"
+        ],
+        "description": "Create derive decorator"
+    },
+    "Write derive(Serialize, Deserialize)": {
+        "scope": "rust",
+        "prefix": "serdes",
+        "body": [
+            "#[derive(Serialize, Deserialize)]"
+        ],
+        "description": "Create derive with Serialize and Deserialize decorator"
+    },
+    "Implement API endpoint": {
+        "scope": "rust",
+        "prefix": "apiendpoint",
+        "body": [
+            "/// ${5:docs}.",
+            "#[api_endpoint(path = \"/${1:path}\", auth = \"${2:required}\")]",
+            "pub fn ${3:method_name}(query: IdQuery) -> ApiResult<${4:Type}> {",
+            "    let conn = state.db();",
+            "    ${6://@TODO(*): code here}",
+            "    unimplemented!();",
+            "}"
+        ]
+    },
+    "Implement API endpoint for search": {
+        "scope": "rust",
+        "prefix": "apiendpointsearch",
+        "body": [
+            "/// Search for ${1:name}",
+            "#[api_endpoint(path = \"/search\", auth = \"required\")]",
+            "pub fn search_${1:name}(query: QueryEntries) -> ApiResult<EntriesResult<${2:Model}>> {",
+            "    query.validate()?;",
+            "",
+            "    let conn = state.db();",
+            "    let dao = ${2:Model}Dao::new(&conn);",
+            "",
+            "let sresult = dao.search(&query.query.unwrap_or(\"\".to_string()), query.offset, query.limit)?;",
+            "",
+            "let entries = sresult.entries.into_iter()${3:.map(|p| p.into())}.collect();",
+            "",
+            "let count = sresult.count;",
+            "Ok(ApiResult::success(EntriesResult { count, entries }))",
+            "",
+            "}"
+        ]
+    },
+    "Implement API endpoint for add": {
+        "prefix": "apiendpointadd",
+        "body": [
+            "/// Add ${1:name}.",
+            "#[api_endpoint(path = \"/${1:name}/add\", auth = \"required\")]",
+            "pub fn add_${1:name}(query: AddService) -> ApiResult<${2:Model}> {",
+            "    query.validate()?;",
+            "",
+            "    let conn = state.db();",
+            "    let dao = ${3:Model}Dao::new(&conn);",
+            "",
+            "    let ${1:name} = dao.add(&query.name, query.cost_per_kg, &query.duration, &conn)?;",
+            "",
+            "    Ok(ApiResult::success(${1:name}${4:.to_api_type(&conn)}))",
+            "}"
+        ]
+    },
+    "Implement API endpoint for update": {
+        "scope": "rust",
+        "prefix": "apiendpointupdate",
+        "body": [
+            "/// Update ${1:name}.",
+            "#[api_endpoint(path = \"/update\", auth = \"required\", mutable)]",
+            "pub fn update_${1:name}(query: Update${2:Name}) -> ApiResult<()> {",
+            "    let conn = state.db();",
+            "    use crate::schema::${1:name}s::{self, dsl};",
+            "    diesel::update(dsl::${1:name}s.filter(dsl::id.eq(query.id)))",
+            "        .set(dsl::name.eq(&query.name))",
+            "        .execute(&conn)",
+            "        .map_err(From::from)?;",
+            "    Ok(ApiResult::success(()))",
+            "}"
+        ]
+    },
+    "Implement custom Dao": {
+        "scope": "rust",
+        "prefix": "impldao",
+        "body": [
+            "#[derive(Insertable)]",
+            "#[table_name = \"${2:name}s\"]",
+            "struct New${1:Name}<'a> {",
+            "    pub name: &'a str,",
+            "}",
+            "",
+            "impl<'a> ${1:Name}Dao<'a> {",
+            "    /// Create new ${1:name}",
+            "    pub fn create(",
+            "        &self,",
+            "        name: &str,",
+            "        ) -> Result<${1:Name}> {",
+            "        use crate::schema::${2:name}s::{self, dsl};",
+            "",
+            "        diesel::insert_into(${2:name}s::table)",
+            "            .values(&New${1:Name} {",
+            "                name,",
+            "            })",
+            "            .get_result(self.db)",
+            "            .map_err(From::from)",
+            " }",
+            "}"
+        ]
+    },
+    "Generate dao get_by_name method": {
+        "prefix": "daogetbyname",
+        "body": [
+            "/// Mendapatkan ${1:name} berdasarkan nama-nya.",
+            "pub fn get_by_name(&self, name: &str) -> Result<${2:RetType}> {",
+            "  use crate::schema::${1:name}s::{self, dsl};",
+            "  dsl::${1:name}s",
+            "    .filter(dsl::name.eq(name))",
+            "    .first(self.db)",
+            "    .map_err(From::from)",
+            "}"
+        ]
+    },
+    "Generate dao listing method": {
+        "prefix": "daolistingmethod",
+        "body": [
+            "    /// Get stock histories based on ${2:ReturnType}",
+            "    pub fn get_${1:method_name}(",
+            "        &self,",
+            "        offset: i64,",
+            "        limit: i64,",
+            "    ) -> Result<Vec<${2:ReturnType}>> {",
+            "        use crate::schema::${3:table_name}s::dsl;",
+            "",
+            "        assert!(offset > -1, \"Invalid offset\");",
+            "        assert!(limit > -1, \"Invalid limit\");",
+            "        assert!(limit < 1_000_000, \"Invalid limit\");",
+            "",
+            "        dsl::${3:table_name}s",
+            "            .filter(dsl::id.ne(0))",
+            "            .offset(offset)",
+            "            .limit(limit)",
+            "            .order(dsl::id.desc())",
+            "            .load(self.db)",
+            "            .map_err(From::from)",
+            "    }"
+        ]
+    },
+    "Implement From": {
+        "prefix": "implfrommodeltoapitype",
+        "body": [
+            "impl From<models::${1:Name}> for ${1:Name} {",
+            "    fn from(a: models::${1:Name}) -> Self {",
+            "        ${2:}",
+            "    }",
+            "}"
+        ]
+    },
+    "Create diesel update code": {
+        "prefix": "dieselupdate",
+        "body": [
+            "use crate::schema::${1:name}s::{self, dsl};",
+            "diesel::update(dsl::${1:name}s.filter(dsl::id.eq(id)))",
+            "    .set(dsl::name.eq(&name))",
+            "    .execute(&conn)",
+            "    .map_err(From::from)?;"
+        ]
+    },
+    "Create diesel insert code": {
+        "prefix": "dieselinsert",
+        "body": [
+            "use crate::schema::${1:name}::{self, dsl};",
+            "diesel::insert_into(${1:name}::table)",
+            "    .values(&${2:})",
+            "    .execute(&conn)",
+            "    ${3:.map_err(From::from)}?;"
+        ]
+    },
+    "Create diesel transaction": {
+        "prefix": "dieseltx",
+        "body": [
+            "conn.build_transaction()",
+            "    .read_write()",
+            "    .run::<_, ${1:error}, _>(|| {",
+            "        ${2:}",
+            "        Ok(())",
+            "    })"
+        ]
+    },
+    "Create diesel delete": {
+        "prefix": "dieseldelete",
+        "body": [
+            "diesel::delete(",
+            "    dsl::${1:tables}.filter(",
+            "        dsl::${2:field}.eq(${2:field})",
+            "       ),",
+            ")",
+            ".execute(self.db)"
+        ]
+    },
+    "use crate::schema...": {
+        "prefix": "usecrateschema",
+        "body": "use crate::schema::${1:models}::{self, dsl};"
+    },
+    "Create ApiResult::success": {
+        "prefix": "apiresultsucess",
+        "body": [
+            "Ok(ApiResult::success(${1:()}))"
+        ]
+    },
+    "use diesel::prelude::*;": {
+        "prefix": "usedieselprelude",
+        "body": "use diesel::prelude::*;"
+    },
+    "Add impl fmt::Display for": {
+        "prefix": "impldisplay",
+        "body": [
+            "impl fmt::Display for ${1:Name} {",
+            "    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+            "        write!(f, \"${2:text}\")",
+            "    }",
+            "}"
+        ]
+    },
+    "Create API query type": {
+        "prefix": "apiquery",
+        "description": "Build API's query struct",
+        "body": [
+            "#[derive(Deserialize, Validate)]",
+            "pub struct ${1:QueryType} {",
+            "    ${2:pub id:ID,}",
+            "    ${3:pub query: Option<String>,}",
+            "    ${4:#[validate(range(min = 0, max = 1_000_000))]",
+            "    pub offset: i64,}",
+            "    ${5:#[validate(range(min = 1, max = 100))]",
+            "    pub limit: i64,}",
+            "}"
+        ]
+    },
+    "Build Rust model struct": {
+        "body": [
+          "#[doc(hidden)]",
+          "#[derive(Queryable, Serialize)]",
+          "pub struct ${1:Name} {",
+          "    pub id: ID,",
+          "    ${2:pub name: String,}",
+          "    ${3:pub labels: Vec<String>,}",
+          "    pub ts: NaiveDateTime",
+          "}",
+          ""
+        ],
+        "prefix": "model",
+        "description": "Build Rust model struct"
+      }
+}
