@@ -15,7 +15,8 @@
     ],
     "activationEvents": [
         "onLanguage:dart",
-        "onLanguage:rust"
+        "onLanguage:rust",
+        "onLanguage:sql"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -31,6 +32,12 @@
             {
                 "command": "extension.web",
                 "title": "ANSVIA: Generate Web code"
+            }
+        ],
+        "snippets": [
+            {
+                "language": "rust",
+                "path": "./rust_snippets.json"
             }
         ]
     },
