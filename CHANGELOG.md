@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.2.17
+
+- Added Rust snippet.
+
 ## 0.2.16
 
 - [Server] Fixup table name in update method generator.
