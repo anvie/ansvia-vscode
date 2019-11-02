@@ -12,7 +12,6 @@ export function setupSyncGen() {
     return;
   }
 
-  // var config = yaml.safeLoad(fs.readFileSync(`${rootDir}/ansvia-vscode.yaml`));
   let conf = config.parse();
   console.log(conf);
 
@@ -26,7 +25,6 @@ export function setupSyncGen() {
     const c = sync_gen['error_code'];
 
     workspace.onDidSaveTextDocument((document: TextDocument) => {
-      // extension.runCommands(document);
       console.log(`document saved: ${document.fileName}`);
       if (document.fileName === `${rootDir}/${c['src']}`) {
         genErrorCodeFromRust(rootDir, c['src'], c['outs']);
@@ -56,9 +54,6 @@ function genErrorCodeFromRust(rootDir: String, source: String, outs: Array<Strin
 
   for (let line of lines) {
     let linet = line.trim();
-
-    // console.log('reName.test(' + linet + '): ' + reName.test(linet));
-
     if (!inErrorCode && reName.test(linet)) {
       inErrorCode = true;
     }

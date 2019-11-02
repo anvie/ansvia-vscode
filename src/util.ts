@@ -70,8 +70,8 @@ export function getFlutterInfo(): FlutterInfo | null {
   // get project name
   var project = yaml.safeLoad(fs.readFileSync(pubspec));
 
-  console.log(project);
-  console.log("project.name: " + project['name']);
+//   console.log(project);
+//   console.log("project.name: " + project['name']);
 
   var projectName = project['name'];
 

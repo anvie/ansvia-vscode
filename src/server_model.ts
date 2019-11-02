@@ -8,8 +8,6 @@ const fs = require('fs');
 
 export enum ServerKind {
   Model,
-  // DaoInline,
-  // DaoNewFile,
   ModelNewModel,
   ModelToApiType
 }
@@ -27,8 +25,6 @@ export async function generateModel(opts: ServerOpts) {
   if (!rootDir) {
     return;
   }
-
-  // console.log("rootDir: " + rootDir);
 
   var name = "";
 

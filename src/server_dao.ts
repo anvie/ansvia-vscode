@@ -114,8 +114,6 @@ export function generateDaoCode(name: string, fields: Field[], opts: GenDaoOpts)
       continue;
     }
 
-    // var ty = "&'a str";
-
     var ty = shortcutTypeToRustType(_field.ty);
 
     if (ty === "String"){
@@ -395,8 +393,6 @@ export async function copyDaoAddMethod() {
     if (field.name === "id" || field.name === "ts"){
       continue;
     }
-
-    // let ty = field.ty;
 
     let fieldNameSnake = snakeCase(fieldName);
 
