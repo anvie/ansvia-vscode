@@ -6,7 +6,6 @@
 - Added Dart snippets.
 - Added more Rust snippets.
 
-
 ## 0.2.17
 
 - Added Rust snippet.
