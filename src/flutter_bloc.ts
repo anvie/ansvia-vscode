@@ -289,7 +289,7 @@ class ${namePascal}Bloc extends Bloc<${namePascal}Event, ${namePascal}State> {
 
     newLines.push(`
     if (data != null) {
-      yield ${namePascal}ListLoaded((data["entries"] as List<dynamic>)
+      yield ${namePascal}ListLoaded((data["result"]["entries"] as List<dynamic>)
           .map((a) => ${namePascal}.fromMap(a))
           .toList());
     } else {

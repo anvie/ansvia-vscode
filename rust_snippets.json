@@ -188,6 +188,15 @@
             "    ${3:.map_err(From::from)}?;"
         ]
     },
+    "Create diesel select code": {
+        "prefix": "dieselselect",
+        "body": [
+            "${1:tablenames}::table",
+            "    .filter(dsl::${2:field}.eq(${2:field}))",
+            "    .select(dsl::${3:field})",
+            "    .first(conn)?"
+        ]
+    },
     "Create diesel transaction": {
         "prefix": "dieseltx",
         "body": [
