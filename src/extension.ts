@@ -4,6 +4,7 @@ import { ExtensionContext, workspace, TextDocument } from 'vscode';
 import * as flutter from './flutter';
 import * as service from './server';
 import * as web from './web';
+import * as code_utils from './code_utils';
 import { setupSyncGen } from './syncgen';
 import config = require('./config');
 import fs = require('fs');
@@ -52,6 +53,7 @@ export function activate(context: ExtensionContext) {
   flutter.setup(context);
   service.setup(context);
   web.setup(context);
+  code_utils.setup(context);
 
   let conf = config.parse();
   console.log("conf:");

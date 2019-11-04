@@ -1,0 +1,80 @@
+{
+    "Generate API get request in Bloc style": {
+        "body": [
+            "final data = await PublicApi.get(\"/${1:endpoint}\");",
+            "",
+            "    if (data != null) {",
+            "      yield ${2:Name}ListLoaded(${2:Name}.fromMap(data[\"result\"]));",
+            "    } else {",
+            "      yield ${2:Name}Failure(error: \"Cannot get ${2:Name} data from server\");",
+            "    }"
+        ],
+        "prefix": "blocapiget",
+        "description": "Generate API get call in Bloc style"
+    },
+    "Generate API get request in Bloc style with entries return": {
+        "body": [
+            "final data = await PublicApi.get(\"/${1:endpoint}\");",
+            "",
+            "    if (data != null) {",
+            "      yield ${2:Name}ListLoaded((data[\"result\"][\"entries\"] as List<dynamic>)",
+            "          .map((a) => ${2:Name}.fromMap(a))",
+            "          .toList());",
+            "    } else {",
+            "      yield ${2:Name}Failure(error: \"Cannot get ${2:Name} data from server\");",
+            "    }"
+        ],
+        "prefix": "blocapigetentries",
+        "description": "Generate API get call in Bloc style with entries return"
+    },
+    "Generate code to fetch API resource via SmartRepo in bloc mode": {
+        "scope": "dart",
+        "prefix": "blocrepofetchentries",
+        "body": [
+            "    yield* repo",
+            "        .fetchGradually(",
+            "            \"${1:entry_name}\",",
+            "            () => PublicApi.get(",
+            "                \"/${2:endpoint}\"),",
+            "            force: event.force)",
+            "        .map((d) {",
+            "      if (d != null) {",
+            "        final entries = (d.data[\"entries\"] as List<dynamic>)",
+            "          .map((a) => ${3:ModelItem}.fromMap(a))",
+            "          .toList();",
+            "",
+            "        if (d.isLocal){",
+            "          return ${3:ModelItem}sLoaded(entries);",
+            "        }else{",
+            "          return ${3:ModelItem}sUpdated(entries);",
+            "        }",
+            "",
+            "      } else {",
+            "        return ${3:ModelItem}Failure(",
+            "            error: \"Cannot get ${3:ModelItem} data from server\");",
+            "      }",
+            "    });"
+        ]
+    },
+    "Generate code to post API resource in bloc mode": {
+        "scope": "dart",
+        "prefix": "blocapiadd",
+        "body": [
+    "    final data = await PublicApi.post(\"/${1:endpoint}\", {",
+    "      // @TODO(you): add params to post here",
+    "    });",
+    "",
+    "    if (data != null) {",
+    "      print(\"resp data: $data\");",
+    "",
+    "      repo.updateEntriesItem(\"entries\", data[\"result\"]);",
+    "",
+    "      yield ${2:Model}Created(${2:Model}.fromMap(data[\"result\"]));",
+    "",
+    "      dispatch(Load${2:Model}());",
+    "    } else {",
+    "      yield ${2:Model}Failure(error: \"Cannot add ${2:Model}\");",
+    "    }"
+        ]
+    }
+}

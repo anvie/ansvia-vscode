@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.3.0
+
+- Added new extension command "Utils" for code utility helper.
+- Added Dart snippets.
+- Added more Rust snippets.
+
+
 ## 0.2.17
 
 - Added Rust snippet.

@@ -5,7 +5,7 @@
     "publisher": "Ansvia",
     "repository": "https://github.com/anvie/ansvia-vscode",
     "license": "SEE LICENSE IN LICENSE",
-    "version": "0.2.17",
+    "version": "0.3.0",
     "engines": {
         "vscode": "^1.36.0",
         "node": ">=6.0.0"
@@ -32,12 +32,20 @@
             {
                 "command": "extension.web",
                 "title": "ANSVIA: Generate Web code"
+            },
+            {
+                "command": "extension.code_utils",
+                "title": "ANSVIA: Utils"
             }
         ],
         "snippets": [
             {
                 "language": "rust",
                 "path": "./rust_snippets.json"
+            },
+            {
+                "language": "dart",
+                "path": "./dart_snippets.json"
             }
         ]
     },
