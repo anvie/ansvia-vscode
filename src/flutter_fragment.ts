@@ -31,11 +31,11 @@ export async function generateFragment(opts: GenFragmentOpts) {
     return;
   }
 
-  // get component name
+  // Get component name
   const name = opts.oneStep === true ? "" : await window.showInputBox({
     value: '',
     valueSelection: [0, 11],
-    placeHolder: 'Fields, eg: name:z,active:b,categories:z[]'
+    placeHolder: 'Name, eg: Todo'
   }) || "";
 
   var libDir = `${flutter.projectDir}/lib`;
