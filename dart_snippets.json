@@ -76,5 +76,30 @@
     "      yield ${2:Model}Failure(error: \"Cannot add ${2:Model}\");",
     "    }"
         ]
+    },
+    "Generate Flutter form field dropdown list": {
+        "scope": "dart",
+        "prefix": "formdropdownlist",
+        "body": [
+    "  FormField(builder: (FormFieldState state) {",
+    "    return InputDecorator(",
+    "      decoration: InputDecoration(labelText: \"${1:name}\"),",
+    "      child: DropdownButtonHideUnderline(",
+    "        child: DropdownButton(",
+    "          items: <String>[${2:\"item1\"}].map((v) {",
+    "            return DropdownMenuItem(",
+    "                value: v, child: Text(v));",
+    "          }).toList(),",
+    "          value: _${3:name}Controller.text,",
+    "          onChanged: (newVal) {",
+    "            setState(() {",
+    "              _${3:name}Controller.text = newVal;",
+    "            });",
+    "          },",
+    "        ),",
+    "      ),",
+    "    );",
+    "  }),"
+        ]
     }
 }
