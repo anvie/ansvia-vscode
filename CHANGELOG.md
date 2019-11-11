@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.3.1
+
+- Add Dart's snippet to generate Flutter dropdown list field code.
+- Fixup labels for Flutter fragment generator code.
+
 ## 0.3.0
 
 - Added new extension command "Utils" for code utility helper.
