@@ -63,16 +63,6 @@ export async function generateModel(opts: GenModelOpts) {
 }
 
 
-
-// class Field {
-//   name:String;
-//   ty:String;
-//   constructor(name:String, ty:String){
-//     this.name = name;
-//     this.ty = ty;
-//   }
-// }
-
 export async function generateModelFromApiType(): Promise<void> {
   const flutter = getFlutterInfo();
 
@@ -174,7 +164,6 @@ export async function generateModelFromApiType(): Promise<void> {
       }
     }
   }
-
 
   if (name === "") {
     window.showWarningMessage("Cannot get model name");
@@ -444,9 +433,9 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
     }
     if (tyIsPlural) {
       if (customType.length === 0){
-        fromMaps.push(`List.from(data['${newFieldNameSnake}'])`);
+        fromMaps.push(`data['${newFieldNameSnake}'] != null ? List.from(data['${newFieldNameSnake}']) : []`);
       }else{
-        fromMaps.push(`List.from(data['${newFieldNameSnake}'].map((a) => ${customType}.fromMap(a)).toList())`);
+        fromMaps.push(`data['${newFieldNameSnake}'] != null ? List.from(data['${newFieldNameSnake}'].map((a) => ${customType}.fromMap(a)).toList()) : []`);
       }
     } else {
       if (customType.length === 0){
