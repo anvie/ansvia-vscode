@@ -60,6 +60,7 @@
     },
     "Implement API endpoint for add": {
         "prefix": "apiendpointadd",
+        "scope": "rust",
         "body": [
             "/// Add ${1:name}.",
             "#[api_endpoint(path = \"/${1:name}/add\", auth = \"required\")]",
@@ -80,11 +81,11 @@
         "prefix": "apiendpointupdate",
         "body": [
             "/// Update ${1:name}.",
-            "#[api_endpoint(path = \"/update\", auth = \"required\", mutable)]",
-            "pub fn update_${1:name}(query: Update${2:Name}) -> ApiResult<()> {",
+            "#[api_endpoint(path = \"/${2:path}\", auth = \"required\", mutable)]",
+            "pub fn update_${3:name}(query: Update${4:Name}) -> ApiResult<()> {",
+            "    use crate::schema::${3:name}s::{self, dsl};",
             "    let conn = state.db();",
-            "    use crate::schema::${1:name}s::{self, dsl};",
-            "    diesel::update(dsl::${1:name}s.filter(dsl::id.eq(query.id)))",
+            "    diesel::update(dsl::${3:name}s.filter(dsl::id.eq(query.id)))",
             "        .set(dsl::name.eq(&query.name))",
             "        .execute(&conn)",
             "        .map_err(From::from)?;",
@@ -122,6 +123,7 @@
     },
     "Generate dao get_by_name method": {
         "prefix": "daogetbyname",
+        "scope": "rust",
         "body": [
             "/// Mendapatkan ${1:name} berdasarkan nama-nya.",
             "pub fn get_by_name(&self, name: &str) -> Result<${2:RetType}> {",
