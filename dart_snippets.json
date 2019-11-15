@@ -1,4 +1,97 @@
 {
+    "Create BlocBuilder code": {
+        "prefix": "blocbuilder",
+        "body": [
+            "BlocBuilder<${1:Name}Bloc, ${1:Name}State>(",
+            "  builder: (BuildContext context, ${1:Name}State state){",
+            "    //@TODO(*): code here",
+            "    return null;",
+            "  }",
+            ");"
+        ]
+    },
+    "Create BlocProvider code": {
+        "prefix": "blocprovider",
+        "body": [
+            "BlocProvider(",
+            "  builder: (BuildContext context){",
+            "    //@TODO(*): code here",
+            "    return ${1:NameBloc};",
+            "  },",
+            "  child: ${2:}",
+            ");"
+        ]
+    },
+    "Create MultiBlocProvider code": {
+        "prefix": "multiblocprovider",
+        "body": [
+            "MultiBlocProvider(",
+            "  providers:[",
+            "    BlocProvider<${1:BlocName}>(",
+            "      builder: (context) => ${1:BlocName}(),",
+            "    )",
+            "  ],",
+            "child: ${2:Widget}()",
+            ");"
+        ]
+    },
+    "Create Map event to state method in Bloc": {
+        "prefix": "mapeventtostate",
+        "body": [
+            "Stream<${1:Name}State> _map${2:Event}ToState(${3:EventName} event) async* {",
+            "  // yield ",
+            "}"
+        ]
+    },
+    "Create Scaffold code": {
+        "prefix": "scaffold",
+        "body": [
+            "Scaffold(",
+            "  appBar: AppBar(",
+            "    title: Text(${1:title})",
+            "  ),",
+            "  body: ${2:null}",
+            ")"
+        ]
+    },
+    "Implement map event to state ADD method": {
+        "prefix": "mapeventtostateadd",
+        "body": [
+            "Stream<${1:name}State> _map${2:Event}ToState(${3:Event} event) async* {",
+            "  yield ${1:name}Loading();",
+            "",
+            "  final data = await PublicApi.post(\"${4:}\", {",
+            "      // @TODO(you): add data to post here",
+            "  });",
+            "  if (data != null) {",
+            "    print(\"data: $$data\");",
+            "",
+            "    yield ${1:name}Added(${1:name}.fromMap(data[\"result\"]));",
+            "  } else {",
+            "    yield ${1:name}Failure(error: \"Cannot add ${1:name}\");",
+            "  }",
+            "}"
+        ]
+    },
+    "Implement map event to state UPDATE method": {
+        "prefix": "mapeventtostateupdate",
+        "body": [
+            "Stream<${1:name}State> _map${2:Event}ToState(${3:Event} event) async* {",
+            "  yield ${1:name}Loading();",
+            "",
+            "  final data = await PublicApi.post(\"${4:/endpoint}\", {",
+            "      // @TODO(you): set data to post here",
+            "  });",
+            "  if (data != null) {",
+            "    print(\"data: $$data\");",
+            "",
+            "    yield ${1:name}Updated(${1:name}.fromMap(data[\"result\"]));",
+            "  } else {",
+            "    yield ${1:name}Failure(error: \"Cannot update ${1:name}\");",
+            "  }",
+            "}"
+        ]
+    },
     "Generate API get request in Bloc style": {
         "body": [
             "final data = await PublicApi.get(\"/${1:endpoint}\");",
@@ -65,7 +158,7 @@
     "    });",
     "",
     "    if (data != null) {",
-    "      print(\"resp data: $data\");",
+    "      print(\"resp data: \\$data\");",
     "",
     "      repo.updateEntriesItem(\"entries\", data[\"result\"]);",
     "",
@@ -100,6 +193,13 @@
     "      ),",
     "    );",
     "  }),"
+        ]
+    },
+    "Generate boilerplate PublicApi.get code": {
+        "scope": "dart",
+        "prefix": "publicapiget",
+        "body": [
+    "final data = await PublicApi.get(\"${1:/path}\");"
         ]
     }
 }

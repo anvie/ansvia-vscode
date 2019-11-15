@@ -34,6 +34,9 @@ Ansvia VSCode extension, to simplify programmer's life.
 ### Mobile (Vue.js)
 * Generate CRUD Vue page.
 
+### Utils
+* Generate snippet code from selected text with multi-line support.
+
 
 ## Configurable
 

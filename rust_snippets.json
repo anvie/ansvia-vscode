@@ -223,20 +223,24 @@
     },
     "use crate::schema...": {
         "prefix": "usecrateschema",
+        "scope": "rust",
         "body": "use crate::schema::${1:models}::{self, dsl};"
     },
     "Create ApiResult::success": {
         "prefix": "apiresultsucess",
+        "scope": "rust",
         "body": [
             "Ok(ApiResult::success(${1:()}))"
         ]
     },
     "use diesel::prelude::*;": {
         "prefix": "usedieselprelude",
+        "scope": "rust",
         "body": "use diesel::prelude::*;"
     },
     "Add impl fmt::Display for": {
         "prefix": "impldisplay",
+        "scope": "rust",
         "body": [
             "impl fmt::Display for ${1:Name} {",
             "    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
@@ -247,6 +251,7 @@
     },
     "Create API query type": {
         "prefix": "apiquery",
+        "scope": "rust",
         "description": "Build API's query struct",
         "body": [
             "#[derive(Deserialize, Validate)]",
@@ -261,6 +266,9 @@
         ]
     },
     "Build Rust model struct": {
+        "prefix": "model",
+        "scope": "rust",
+        "description": "Build Rust model struct",
         "body": [
             "#[doc(hidden)]",
             "#[derive(Queryable, Serialize)]",
@@ -271,8 +279,6 @@
             "    pub ts: NaiveDateTime",
             "}",
             ""
-        ],
-        "prefix": "model",
-        "description": "Build Rust model struct"
+        ]
     }
 }

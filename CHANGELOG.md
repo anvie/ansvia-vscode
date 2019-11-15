@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.3.2
+
+- Enhance class variables and constructor code generator to use scoped class name first.
+- Add more Dart snippets.
+- Add Flutter's code generator variants for class variables constructor CVC1b and CVC4.
+
 ## 0.3.1
 
 - Add Dart's snippet to generate Flutter dropdown list field code.
