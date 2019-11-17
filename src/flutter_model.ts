@@ -426,9 +426,9 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
       toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel};`);
     }else{
       if (tyIsPlural){
-        toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel}.map((a) => a.toMap()).toList();`);
+        toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel} != null ? this.${newFieldNameCamel}.map((a) => a.toMap()).toList() : List();`);
       }else{
-        toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel}.toMap();`);
+        toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel} ?? this.${newFieldNameCamel}.toMap();`);
       }
     }
     if (tyIsPlural) {
@@ -441,7 +441,7 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
       if (customType.length === 0){
         fromMaps.push(`data['${newFieldNameSnake}'] as ${ty}`);
       }else{
-        fromMaps.push(`${customType}.fromMap(data['${newFieldNameSnake}'])`);
+        fromMaps.push(`data['${newFieldNameSnake}'] != null ? ${customType}.fromMap(data['${newFieldNameSnake}']) : null`);
       }
     }
     copiesParams.push(`${ty} ${newFieldNameCamel}`);
