@@ -100,28 +100,28 @@ export async function generateModelFromApiType(): Promise<void> {
       }
       console.log("s: " + s);
       console.log("s[2]: " + s[2]);
-      if (s[1] === 'id'){
+      if (s[1] === 'id') {
         // ignore id
         continue;
       }
       if (s[1]) {
-        switch (s[2].trim()){
+        switch (s[2].trim()) {
           case "String": {
             fields.push(`${s[1]}:z`);
             break;
           }
-          case "ID": 
-          case "i16": 
-          case "u16": 
-          case "i32": 
-          case "u32": 
-          case "i64": 
-          case "u64": 
+          case "ID":
+          case "i16":
+          case "u16":
+          case "i32":
+          case "u32":
+          case "i64":
+          case "u64":
           case "u32": {
             fields.push(`${s[1]}:i`);
             break;
           }
-          case "f32": 
+          case "f32":
           case "f64": {
             fields.push(`${s[1]}:d`);
             break;
@@ -150,12 +150,12 @@ export async function generateModelFromApiType(): Promise<void> {
           }
           default: {
             let isPlural = s[2].startsWith('Vec<');
-            if (isPlural){
-              if (s[2].endsWith('>')){
+            if (isPlural) {
+              if (s[2].endsWith('>')) {
                 s[2] = s[2].substring(0, s[2].length - 1);
               }
               fields.push(`${s[1]}:${s[2]}[]`);
-            }else{
+            } else {
               fields.push(`${s[1]}:${s[2].trim()}`);
             }
             break;
@@ -182,7 +182,7 @@ export async function generateModelFromApiType(): Promise<void> {
   openAndFormatFile(modelFilePath);
 }
 
-export async function generateModelFromSQLDef(opts: GenModelOpts){
+export async function generateModelFromSQLDef(opts: GenModelOpts) {
   const flutter = getFlutterInfo();
 
   if (!flutter) {
@@ -239,7 +239,7 @@ export async function generateModelFromSQLDef(opts: GenModelOpts){
     const sqlTy = s[2].toLowerCase();
     const isPlural = s[3] ? true : false;
 
-    if (field === "id"){
+    if (field === "id") {
       // ignore id
       continue;
     }
@@ -277,18 +277,18 @@ export async function generateModelFromSQLDef(opts: GenModelOpts){
       case "varchar":
       case "text": {
         // newLines.push(`final String ${fieldCamel};`);
-        if (isPlural){
+        if (isPlural) {
           fields.push(`${field}:z[]`);
-        }else{
+        } else {
           fields.push(`${field}:z`);
         }
         break;
       }
       case "boolean": {
         // newLines.push(`final bool ${fieldCamel};`);
-        if (isPlural){
+        if (isPlural) {
           fields.push(`${field}:b[]`);
-        }else{
+        } else {
           fields.push(`${field}:b`);
         }
         break;
@@ -299,7 +299,7 @@ export async function generateModelFromSQLDef(opts: GenModelOpts){
     }
   }
 
-  if (name === ""){
+  if (name === "") {
     window.showWarningMessage("Cannot get model name");
   }
 
@@ -331,6 +331,7 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
   var toMaps = [];
   var copiesParams = [];
   var copiesAssigns = [];
+  var assertions = [];
 
   for (let _field of opts.fields) {
     var newFieldName = _field.trim();
@@ -403,10 +404,10 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
       default: {
         tyIsPlural = s[1].endsWith('[]');
         customType = s[1].trim();
-        if (tyIsPlural){
+        if (tyIsPlural) {
           customType = s[1].substring(0, s[1].length - 2).trim();
           ty = `List<${customType}>`;
-        }else{
+        } else {
           ty = `${customType}`;
         }
         break;
@@ -422,25 +423,26 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
     supers.push(newFieldNameCamel);
 
     fields.push(`  final ${ty} ${newFieldNameCamel};`);
-    if (customType.length === 0){
+    if (customType.length === 0) {
       toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel};`);
-    }else{
-      if (tyIsPlural){
+    } else {
+      if (tyIsPlural) {
         toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel} != null ? this.${newFieldNameCamel}.map((a) => a.toMap()).toList() : List();`);
-      }else{
+      } else {
         toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel} ?? this.${newFieldNameCamel}.toMap();`);
       }
     }
     if (tyIsPlural) {
-      if (customType.length === 0){
+      if (customType.length === 0) {
         fromMaps.push(`data['${newFieldNameSnake}'] != null ? List.from(data['${newFieldNameSnake}']) : []`);
-      }else{
+      } else {
         fromMaps.push(`data['${newFieldNameSnake}'] != null ? List.from(data['${newFieldNameSnake}'].map((a) => ${customType}.fromMap(a)).toList()) : []`);
       }
     } else {
-      if (customType.length === 0){
+      assertions.push(`assert(data['${newFieldNameSnake}'] != null, "${namePascal}.${newFieldNameSnake} is null");`);
+      if (customType.length === 0) {
         fromMaps.push(`data['${newFieldNameSnake}'] as ${ty}`);
-      }else{
+      } else {
         fromMaps.push(`data['${newFieldNameSnake}'] != null ? ${customType}.fromMap(data['${newFieldNameSnake}']) : null`);
       }
     }
@@ -463,8 +465,14 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
   if (copiesAssigns.length > 0) {
     copiesAssignsAdd = ", " + copiesAssigns.join(", ");
   }
+  var assertionsStr = "";
+  if (assertions.length > 0){
+    assertionsStr = assertions.join('\n    ');
+  }
 
-  return `// this code is autogenerated using ansvia-vscode extension.
+  return `// this code is autogenerated by ansvia-vscode extension.
+// please don't edit this by hand
+// use 'ansvia-vscode extension > Edit Model fields' instead.
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 
@@ -485,6 +493,7 @@ class ${namePascal} extends Equatable {
   }
 
   static ${namePascal} fromMap(Map<String, dynamic> data) {
+    ${assertionsStr}
     return ${namePascal}(
         data['id'] as int${fromMapsAdd});
   }

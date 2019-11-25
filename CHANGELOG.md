@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.3.4
+
+- Add assertion in Flutter model `fromMap`.
+- Handle null in Flutter model field.
+
 ## 0.3.2
 
 - Enhance class variables and constructor code generator to use scoped class name first.
