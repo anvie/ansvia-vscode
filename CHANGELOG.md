@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.3.5
+
+- Added support syncgen to generate Rust (server) enum types to Flutter (frontends) dart/js code.
+- error_code syncgen is now deprecated, use syncgen.enum_types instead, see README for example usage.
+
 ## 0.3.4
 
 - Add assertion in Flutter model `fromMap`.
