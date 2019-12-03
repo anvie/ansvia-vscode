@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.3.6
+- Added command to generate dao from model and copy generated result into clipboard.
+
 ## 0.3.5
 
 - Added support syncgen to generate Rust (server) enum types to Flutter (frontends) dart/js code.

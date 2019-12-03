@@ -24,6 +24,7 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate DAO inline", () => generateDao(false) ),
       new Cmd("Generate DAO new file", () => generateDao(true)),
       new Cmd("Generate DAO from model new file", () => generateDaoFromModel(true) ),
+      new Cmd("Generate DAO from model copy clipboard", () => generateDaoFromModel(false) ),
       new Cmd("Generate Model to API type converter", () => generateModel(new ServerOpts(ServerKind.ModelToApiType))),
       new Cmd("Generate Model from SQL definition", () => generateModelFromSQLDef(new ServerOpts(ServerKind.Model))),
       new Cmd("Generate New Model (creator) code", () => generateModel(new ServerOpts(ServerKind.ModelNewModel))),
