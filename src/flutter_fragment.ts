@@ -168,7 +168,7 @@ function getModelGeneratorOptsFromText(text: String): NameAndOpts {
         return p.name + ":i[]";
       }
       default:
-        return p.name + ':z';
+        return p.name + ':' + p.ty;
     }
   });
   return new NameAndOpts(className, opts);

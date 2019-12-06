@@ -429,7 +429,7 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
       if (tyIsPlural) {
         toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel} != null ? this.${newFieldNameCamel}.map((a) => a.toMap()).toList() : List();`);
       } else {
-        toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel} ?? this.${newFieldNameCamel}.toMap();`);
+        toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel} != null ? this.${newFieldNameCamel}.toMap() : null;`);
       }
     }
     if (tyIsPlural) {

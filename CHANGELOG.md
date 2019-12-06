@@ -1,6 +1,12 @@
 # Change Log
 
+## 0.3.7
+
+- [Fixed] Bug edit model fields with custom type always treated as String type.
+- [Fixed] Bug model `toMap` not convert recursively for custom type.
+
 ## 0.3.6
+
 - Added command to generate dao from model and copy generated result into clipboard.
 
 ## 0.3.5
