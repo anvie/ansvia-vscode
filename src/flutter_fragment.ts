@@ -1,6 +1,6 @@
 
 import { window, Position, Range, TextEditorEdit, WorkspaceEdit, Uri, workspace } from 'vscode';
-import { getFlutterInfo, FlutterInfo, reformatDocument } from './util';
+import { getFlutterInfo, FlutterInfo, reformatDocument, parseFieldsStr, shortcutTypeToFlutterType } from './util';
 import * as flutter_model from './flutter_model';
 
 var snakeCase = require('snake-case');
@@ -106,10 +106,12 @@ class NameAndOpts {
   }
 }
 
+/// Parse model's text code into NameAndOpts
 function getModelGeneratorOptsFromText(text: String): NameAndOpts {
   let reClass = new RegExp('class (\\w*)');
   let reFieldDecl = new RegExp('final (\\w+|List<\\w+>) (\\w+);');
   let reConstructor = new RegExp('\\w+\\(this\\.id.*?\\)');
+//   let rePluralFieldDecl = new RegExp('final List<(\\w+)> (\\w+)');
 
   let lines = text.split('\n');
 
@@ -132,7 +134,13 @@ function getModelGeneratorOptsFromText(text: String): NameAndOpts {
         continue;
       }
       // collect
-      params.push(new Param(r[2], r[1]));
+      let _ty:string = r[1];
+      if (r[1].startsWith('List<')){
+          // for plural field
+          let s = r[1].split(/\<|\>/);
+          _ty = s[1] + '[]';
+      }
+      params.push(new Param(r[2], _ty));
     }
     if (reConstructor.test(linet)) {
       break;
@@ -155,16 +163,16 @@ function getModelGeneratorOptsFromText(text: String): NameAndOpts {
       case "bool": {
         return p.name + ':b';
       }
-      case "list<string>": {
+      case "string[]": {
         return p.name + ":z[]";
       }
-      case "list<double>": {
+      case "double[]": {
         return p.name + ":d[]";
       }
-      case "list<bool>": {
+      case "bool[]": {
         return p.name + ":b[]";
       }
-      case "list<int>": {
+      case "int[]": {
         return p.name + ":i[]";
       }
       default:
@@ -199,11 +207,6 @@ async function _patchCodeEditModelField(flutter: FlutterInfo) {
 }
 
 async function _patchCodeAddModelField(fieldsStr: string, flutter: FlutterInfo, builder: TextEditorEdit) {
-  // let reClass = new RegExp('class (\\w*)');
-  // let reFieldDecl = new RegExp('final (\\w+|List<\\w+>) (\\w+);');
-  // let reConstructor = new RegExp('\\w+\\(this\\.id.*?\\)');
-  // // let reConstructorParams = new RegExp();
-  // let reToMap = new RegExp('data\\["\\w*"\\] = this.\\w*;');
 
   let text = window.activeTextEditor!.document.getText();
   let lines = text.split('\n');
@@ -212,71 +215,7 @@ async function _patchCodeAddModelField(fieldsStr: string, flutter: FlutterInfo, 
 
   let nameAndOpts = getModelGeneratorOptsFromText(text);
 
-  // var className = "";
-  // let params:Param[] = [];
-
-  // // get class name and parse params
-  // for (let _line of lines){
-  //   let linet = _line.trim();
-  //   console.log(linet);
-  //   let r = reClass.exec(linet);
-  //   if (r){
-  //     className = r[1];
-  //   }
-  //   r = null;
-  //   r = reFieldDecl.exec(linet);
-  //   if (r){
-  //     // ignore `id` field
-  //     if (r[2] === 'id'){
-  //       continue;
-  //     }
-  //     // collect
-  //     params.push(new Param(r[2], r[1]));
-  //   }
-  //   if (reConstructor.test(linet)){
-  //     break;
-  //   }
-  // }
-  // // console.log(`params: ${params}`);
-
-  // let opts = new flutter_model.GenModelOpts();
-  // opts.fields = params.map((p) => {
-  //   switch(p.ty.toLowerCase()){
-  //     case "int": {
-  //       return p.name + ':i';
-  //     }
-  //     case "string": {
-  //       return p.name + ':z';
-  //     }
-  //     case "double": {
-  //       return p.name + ':d';
-  //     }
-  //     case "bool": {
-  //       return p.name + ':b';
-  //     }
-  //     case "list<string>": {
-  //       return p.name + ":z[]";
-  //     }
-  //     case "list<double>": {
-  //       return p.name + ":d[]";
-  //     }
-  //     case "list<bool>": {
-  //       return p.name + ":b[]";
-  //     }
-  //     case "list<int>": {
-  //       return p.name + ":i[]";
-  //     }
-  //     default:
-  //       return p.name + ':z';
-  //   }
-  // });
-
-  // console.log(`fieldsStrList: ${fieldsStrList}`);
   nameAndOpts.opts.fields = nameAndOpts.opts.fields.concat(fieldsStrList);
-
-  // console.log("opts.fields:");
-  // console.log(opts.fields);
-
 
   let newContent = flutter_model.genCode(nameAndOpts.name, flutter, nameAndOpts.opts);
 
@@ -405,4 +344,93 @@ async function _patchCode(filePath: string, name: String, flutter: FlutterInfo, 
   let formatEdit = new WorkspaceEdit();
   workspace.applyEdit(formatEdit);
 
+}
+
+export async function generateClassVarAndConstructor(useFinal: boolean, withKey: boolean, allRequired: boolean = false, notOptional: boolean = false) {
+
+    const editor = window.activeTextEditor!;
+
+    let text = editor.document.getText();
+    const lines = text.split('\n');
+
+    // get class scoped class name if any
+    const currentLine = editor.selection.anchor.line;
+    const reClass = new RegExp("class (\\w*).*{");
+
+    var name = "";
+
+    for (var i = currentLine; i > 0; i--) {
+        const line = lines[i];
+        const s = reClass.exec(line);
+        if (s && s[1]) {
+            name = s[1];
+            break;
+        }
+    }
+
+    if (name === "") {
+        name = await window.showInputBox({
+            value: '',
+            placeHolder: 'class name, eg: Todo'
+        }) || "";
+    }
+
+    if (name === "") {
+        window.showWarningMessage("No name");
+        return;
+    }
+
+    // const namePascalCase = pascalCase(name);
+
+    const fieldsStr = await window.showInputBox({
+        value: '',
+        placeHolder: 'Fields, eg: name:z,active:b,timestamp:dt,num:i,num:i64,keywords:z[]'
+    }) || "";
+    let fields = parseFieldsStr(fieldsStr);
+
+    var newLines: string[] = [];
+    let params = [];
+
+    for (let field of fields) {
+        if (useFinal) {
+            newLines.push(`final ${shortcutTypeToFlutterType(field.ty)} ${field.nameCamel};`);
+        } else {
+            newLines.push(`${shortcutTypeToFlutterType(field.ty)} ${field.nameCamel};`);
+        }
+
+        if (allRequired) {
+            params.push(`@required this.${field.nameCamel}`);
+        } else {
+            params.push(`this.${field.nameCamel}`);
+        }
+    }
+    newLines.push("");
+
+    let paramsStr = params.join(', ');
+
+    if (notOptional) {
+        if (withKey) {
+            newLines.push(`  ${name}(Key key, ${paramsStr}) : super(key: key);`);
+        } else {
+            newLines.push(`  ${name}(${paramsStr});`);
+        }
+    } else {
+        if (withKey) {
+            newLines.push(`  ${name}({Key key, ${paramsStr}}) : super(key: key);`);
+        } else {
+            newLines.push(`  ${name}({${paramsStr}});`);
+        }
+    }
+
+    newLines.push("");
+
+    var filePath = "";
+    if (window.activeTextEditor !== null) {
+        filePath = window.activeTextEditor!.document.fileName;
+    }
+    editor.edit(builder => {
+        let result = newLines.join('\n');
+        builder.insert(editor.selection.anchor, result);
+        reformatDocument(Uri.file(filePath));
+    });
 }

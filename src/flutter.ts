@@ -6,7 +6,7 @@ import { Cmd } from './cmd';
 import { generatePage, GenPageOpts, PageKind } from './flutter_page';
 import { generateWidget, GenWidgetOpts, WidgetKind } from './flutter_widget';
 import { generateModel, GenModelOpts, generateModelFromSQLDef, generateModelFromApiType } from './flutter_model';
-import { generateFragment, GenFragmentOpts, FragmentKind } from './flutter_fragment';
+import { generateFragment, GenFragmentOpts, FragmentKind, generateClassVarAndConstructor } from './flutter_fragment';
 import { generateButton, GenButtonOpts, ButtonKind } from './flutter_button';
 import * as flutterBloc from './flutter_bloc';
 
@@ -65,92 +65,6 @@ export function setup(context: ExtensionContext) {
     }));
 }
 
-async function generateClassVarAndConstructor(useFinal: boolean, withKey: boolean, allRequired: boolean = false, notOptional: boolean = false) {
-
-    const editor = window.activeTextEditor!;
-
-    let text = editor.document.getText();
-    const lines = text.split('\n');
-
-    // get class scoped class name if any
-    const currentLine = editor.selection.anchor.line;
-    const reClass = new RegExp("class (\\w*).*{");
-
-    var name = "";
-
-    for (var i = currentLine; i > 0; i--) {
-        const line = lines[i];
-        const s = reClass.exec(line);
-        if (s && s[1]) {
-            name = s[1];
-            break;
-        }
-    }
-
-    if (name === "") {
-        name = await window.showInputBox({
-            value: '',
-            placeHolder: 'class name, eg: Todo'
-        }) || "";
-    }
-
-    if (name === "") {
-        window.showWarningMessage("No name");
-        return;
-    }
-
-    const namePascalCase = pascalCase(name);
-
-    const fieldsStr = await window.showInputBox({
-        value: '',
-        placeHolder: 'Fields, eg: name:z,active:b,timestamp:dt,num:i,num:i64,keywords:z[]'
-    }) || "";
-    let fields = parseFieldsStr(fieldsStr);
-
-    var newLines: string[] = [];
-    let params = [];
-
-    for (let field of fields) {
-        if (useFinal) {
-            newLines.push(`final ${shortcutTypeToFlutterType(field.ty)} ${field.nameCamel};`);
-        } else {
-            newLines.push(`${shortcutTypeToFlutterType(field.ty)} ${field.nameCamel};`);
-        }
-
-        if (allRequired) {
-            params.push(`@required this.${field.nameCamel}`);
-        } else {
-            params.push(`this.${field.nameCamel}`);
-        }
-    }
-    newLines.push("\n");
-
-    let paramsStr = params.join(', ');
-
-    if (notOptional) {
-        if (withKey) {
-            newLines.push(`${namePascalCase}(Key key, ${paramsStr}) : super(key: key);`);
-        } else {
-            newLines.push(`${namePascalCase}(${paramsStr});`);
-        }
-    } else {
-        if (withKey) {
-            newLines.push(`${namePascalCase}({Key key, ${paramsStr}}) : super(key: key);`);
-        } else {
-            newLines.push(`${namePascalCase}({${paramsStr}});`);
-        }
-    }
-
-    var filePath = "";
-    if (window.activeTextEditor !== null) {
-        filePath = window.activeTextEditor!.document.fileName;
-    }
-    editor.edit(builder => {
-        let result = newLines.join('\n');
-        builder.insert(editor.selection.anchor, result);
-        reformatDocument(Uri.file(filePath));
-    });
-}
 
 export async function generateFlutter(opts: FlutterOpts) {
     const rootDir = getRootDir(ProjectType.Mobile);
