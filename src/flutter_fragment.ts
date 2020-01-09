@@ -111,12 +111,14 @@ function getModelGeneratorOptsFromText(text: String): NameAndOpts {
   let reClass = new RegExp('class (\\w*)');
   let reFieldDecl = new RegExp('final (\\w+|List<\\w+>) (\\w+);');
   let reConstructor = new RegExp('\\w+\\(this\\.id.*?\\)');
-//   let rePluralFieldDecl = new RegExp('final List<(\\w+)> (\\w+)');
+  let reImportDefs = new RegExp('import \'(.*?)\';');
+  //   let rePluralFieldDecl = new RegExp('final List<(\\w+)> (\\w+)');
 
   let lines = text.split('\n');
 
   var className = "";
   let params: Param[] = [];
+  let importDefs: string[] = [];
 
   // get class name and parse params
   for (let _line of lines) {
@@ -134,13 +136,18 @@ function getModelGeneratorOptsFromText(text: String): NameAndOpts {
         continue;
       }
       // collect
-      let _ty:string = r[1];
-      if (r[1].startsWith('List<')){
-          // for plural field
-          let s = r[1].split(/\<|\>/);
-          _ty = s[1] + '[]';
+      let _ty: string = r[1];
+      if (r[1].startsWith('List<')) {
+        // for plural field
+        let s = r[1].split(/\<|\>/);
+        _ty = s[1] + '[]';
+      }
+      if (linet.endsWith('// Nullable')){
+        _ty = _ty + '?';
       }
       params.push(new Param(r[2], _ty));
+    } else if (reImportDefs.test(linet)) {
+      importDefs.push(linet);
     }
     if (reConstructor.test(linet)) {
       break;
@@ -150,35 +157,37 @@ function getModelGeneratorOptsFromText(text: String): NameAndOpts {
 
   let opts = new flutter_model.GenModelOpts();
   opts.fields = params.map((p) => {
-    switch (p.ty.toLowerCase()) {
+    let nullable = p.ty.endsWith('?') ? '?' : '';
+    switch (flutter_model.getTypeName(p.ty.toLowerCase())) {
       case "int": {
-        return p.name + ':i';
+        return p.name + ':i' + nullable;
       }
       case "string": {
-        return p.name + ':z';
+        return p.name + ':z' + nullable;
       }
       case "double": {
-        return p.name + ':d';
+        return p.name + ':d' + nullable;
       }
       case "bool": {
-        return p.name + ':b';
+        return p.name + ':b' + nullable;
       }
       case "string[]": {
-        return p.name + ":z[]";
+        return p.name + ":z[]" + nullable;
       }
       case "double[]": {
-        return p.name + ":d[]";
+        return p.name + ":d[]" + nullable;
       }
       case "bool[]": {
-        return p.name + ":b[]";
+        return p.name + ":b[]" + nullable;
       }
       case "int[]": {
-        return p.name + ":i[]";
+        return p.name + ":i[]" + nullable;
       }
       default:
         return p.name + ':' + p.ty;
     }
   });
+  opts.importDefs = importDefs;
   return new NameAndOpts(className, opts);
 }
 
@@ -348,89 +357,89 @@ async function _patchCode(filePath: string, name: String, flutter: FlutterInfo, 
 
 export async function generateClassVarAndConstructor(useFinal: boolean, withKey: boolean, allRequired: boolean = false, notOptional: boolean = false) {
 
-    const editor = window.activeTextEditor!;
+  const editor = window.activeTextEditor!;
 
-    let text = editor.document.getText();
-    const lines = text.split('\n');
+  let text = editor.document.getText();
+  const lines = text.split('\n');
 
-    // get class scoped class name if any
-    const currentLine = editor.selection.anchor.line;
-    const reClass = new RegExp("class (\\w*).*{");
+  // get class scoped class name if any
+  const currentLine = editor.selection.anchor.line;
+  const reClass = new RegExp("class (\\w*).*{");
 
-    var name = "";
+  var name = "";
 
-    for (var i = currentLine; i > 0; i--) {
-        const line = lines[i];
-        const s = reClass.exec(line);
-        if (s && s[1]) {
-            name = s[1];
-            break;
-        }
+  for (var i = currentLine; i > 0; i--) {
+    const line = lines[i];
+    const s = reClass.exec(line);
+    if (s && s[1]) {
+      name = s[1];
+      break;
     }
+  }
 
-    if (name === "") {
-        name = await window.showInputBox({
-            value: '',
-            placeHolder: 'class name, eg: Todo'
-        }) || "";
-    }
-
-    if (name === "") {
-        window.showWarningMessage("No name");
-        return;
-    }
-
-    // const namePascalCase = pascalCase(name);
-
-    const fieldsStr = await window.showInputBox({
-        value: '',
-        placeHolder: 'Fields, eg: name:z,active:b,timestamp:dt,num:i,num:i64,keywords:z[]'
+  if (name === "") {
+    name = await window.showInputBox({
+      value: '',
+      placeHolder: 'class name, eg: Todo'
     }) || "";
-    let fields = parseFieldsStr(fieldsStr);
+  }
 
-    var newLines: string[] = [];
-    let params = [];
+  if (name === "") {
+    window.showWarningMessage("No name");
+    return;
+  }
 
-    for (let field of fields) {
-        if (useFinal) {
-            newLines.push(`final ${shortcutTypeToFlutterType(field.ty)} ${field.nameCamel};`);
-        } else {
-            newLines.push(`${shortcutTypeToFlutterType(field.ty)} ${field.nameCamel};`);
-        }
+  // const namePascalCase = pascalCase(name);
 
-        if (allRequired) {
-            params.push(`@required this.${field.nameCamel}`);
-        } else {
-            params.push(`this.${field.nameCamel}`);
-        }
-    }
-    newLines.push("");
+  const fieldsStr = await window.showInputBox({
+    value: '',
+    placeHolder: 'Fields, eg: name:z,active:b,timestamp:dt,num:i,num:i64,keywords:z[]'
+  }) || "";
+  let fields = parseFieldsStr(fieldsStr);
 
-    let paramsStr = params.join(', ');
+  var newLines: string[] = [];
+  let params = [];
 
-    if (notOptional) {
-        if (withKey) {
-            newLines.push(`  ${name}(Key key, ${paramsStr}) : super(key: key);`);
-        } else {
-            newLines.push(`  ${name}(${paramsStr});`);
-        }
+  for (let field of fields) {
+    if (useFinal) {
+      newLines.push(`final ${shortcutTypeToFlutterType(field.ty)} ${field.nameCamel};`);
     } else {
-        if (withKey) {
-            newLines.push(`  ${name}({Key key, ${paramsStr}}) : super(key: key);`);
-        } else {
-            newLines.push(`  ${name}({${paramsStr}});`);
-        }
+      newLines.push(`${shortcutTypeToFlutterType(field.ty)} ${field.nameCamel};`);
     }
 
-    newLines.push("");
-
-    var filePath = "";
-    if (window.activeTextEditor !== null) {
-        filePath = window.activeTextEditor!.document.fileName;
+    if (allRequired) {
+      params.push(`@required this.${field.nameCamel}`);
+    } else {
+      params.push(`this.${field.nameCamel}`);
     }
-    editor.edit(builder => {
-        let result = newLines.join('\n');
-        builder.insert(editor.selection.anchor, result);
-        reformatDocument(Uri.file(filePath));
-    });
+  }
+  newLines.push("");
+
+  let paramsStr = params.join(', ');
+
+  if (notOptional) {
+    if (withKey) {
+      newLines.push(`  ${name}(Key key, ${paramsStr}) : super(key: key);`);
+    } else {
+      newLines.push(`  ${name}(${paramsStr});`);
+    }
+  } else {
+    if (withKey) {
+      newLines.push(`  ${name}({Key key, ${paramsStr}}) : super(key: key);`);
+    } else {
+      newLines.push(`  ${name}({${paramsStr}});`);
+    }
+  }
+
+  newLines.push("");
+
+  var filePath = "";
+  if (window.activeTextEditor !== null) {
+    filePath = window.activeTextEditor!.document.fileName;
+  }
+  editor.edit(builder => {
+    let result = newLines.join('\n');
+    builder.insert(editor.selection.anchor, result);
+    reformatDocument(Uri.file(filePath));
+  });
 }

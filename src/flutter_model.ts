@@ -10,9 +10,11 @@ var fs = require('fs');
 
 export class GenModelOpts {
   fields: string[];
+  importDefs: string[];
 
   constructor() {
     this.fields = [];
+    this.importDefs = [];
   }
 }
 
@@ -321,6 +323,11 @@ export async function generateModelFromSQLDef(opts: GenModelOpts) {
   }
 }
 
+/// Get only type name
+export function getTypeName(t: string): string {
+  return t.replace(/(\w+)\?$/gi, "$1").trim();
+}
+
 export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) {
   const namePascal = pascalCase(name);
 
@@ -349,7 +356,10 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
     }
     newFieldName = s[0];
 
-    switch (s[1]) {
+    let isNullable = s[1].endsWith('?');
+    let typeName = getTypeName(s[1]);
+
+    switch (typeName) {
       case 'id': {
         ty = "int";
         break;
@@ -402,10 +412,10 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
         break;
       }
       default: {
-        tyIsPlural = s[1].endsWith('[]');
-        customType = s[1].trim();
+        tyIsPlural = typeName.endsWith('[]');
+        customType = typeName.trim();
         if (tyIsPlural) {
-          customType = s[1].substring(0, s[1].length - 2).trim();
+          customType = typeName.substring(0, typeName.length - 2).trim();
           ty = `List<${customType}>`;
         } else {
           ty = `${customType}`;
@@ -422,7 +432,12 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
     params.push(`this.${newFieldNameCamel}`);
     supers.push(newFieldNameCamel);
 
-    fields.push(`  final ${ty} ${newFieldNameCamel};`);
+    if (isNullable){
+      fields.push(`  final ${ty} ${newFieldNameCamel}; // Nullable`);
+    }else{
+      fields.push(`  final ${ty} ${newFieldNameCamel};`);
+    }
+
     if (customType.length === 0) {
       toMaps.push(`    data["${newFieldNameSnake}"] = this.${newFieldNameCamel};`);
     } else {
@@ -439,7 +454,9 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
         fromMaps.push(`data['${newFieldNameSnake}'] != null ? List.from(data['${newFieldNameSnake}'].map((a) => ${customType}.fromMap(a)).toList()) : []`);
       }
     } else {
-      assertions.push(`assert(data['${newFieldNameSnake}'] != null, "${namePascal}.${newFieldNameSnake} is null");`);
+      if (!isNullable) {
+        assertions.push(`assert(data['${newFieldNameSnake}'] != null, "${namePascal}.${newFieldNameSnake} is null");`);
+      }
       if (customType.length === 0) {
         fromMaps.push(`data['${newFieldNameSnake}'] as ${ty}`);
       } else {
@@ -466,7 +483,7 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
     copiesAssignsAdd = ", " + copiesAssigns.join(", ");
   }
   var assertionsStr = "";
-  if (assertions.length > 0){
+  if (assertions.length > 0) {
     assertionsStr = assertions.join('\n    ');
   }
 
@@ -475,6 +492,7 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
 // use 'ansvia-vscode extension > Edit Model fields' instead.
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
+${opts.importDefs.filter( (a) => a !== "import 'package:equatable/equatable.dart';" && a !== "import 'package:meta/meta.dart';" ).join('\n')}
 
 /// Model for ${name}
 @immutable
