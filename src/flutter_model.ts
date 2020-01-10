@@ -1,6 +1,7 @@
 
 import { window } from 'vscode';
 import { getFlutterInfo, FlutterInfo, openAndFormatFile, openFile } from './util';
+import { print } from 'util';
 
 var snakeCase = require('snake-case');
 var camelCase = require('camel-case');
@@ -107,9 +108,22 @@ export async function generateModelFromApiType(): Promise<void> {
         continue;
       }
       if (s[1]) {
-        switch (s[2].trim()) {
+        let _ty = s[2].trim();
+        let nullable = _ty.startsWith("Option<");
+
+        console.log(`_ty: ${_ty}, nullable: ${nullable}`);
+
+        if (nullable){
+          _ty = _ty.substring(7, _ty.length - 1);
+        }
+
+        switch (_ty) {
           case "String": {
-            fields.push(`${s[1]}:z`);
+            if (nullable) {
+              fields.push(`${s[1]}:z?`);
+            }else{
+              fields.push(`${s[1]}:z`);
+            }
             break;
           }
           case "ID":
@@ -120,20 +134,36 @@ export async function generateModelFromApiType(): Promise<void> {
           case "i64":
           case "u64":
           case "u32": {
-            fields.push(`${s[1]}:i`);
+            if (nullable){
+              fields.push(`${s[1]}:i?`);
+            }else{
+              fields.push(`${s[1]}:i`);
+            }
             break;
           }
           case "f32":
           case "f64": {
-            fields.push(`${s[1]}:d`);
+            if (nullable){
+              fields.push(`${s[1]}:d?`);
+            }else{
+              fields.push(`${s[1]}:d`);
+            }
             break;
           }
           case "bool": {
-            fields.push(`${s[1]}:b`);
+            if (nullable){
+              fields.push(`${s[1]}:b?`);
+            }else{
+              fields.push(`${s[1]}:b`);
+            }
             break;
           }
           case "Vec<String>": {
-            fields.push(`${s[1]}:z[]`);
+            if (nullable){
+              fields.push(`${s[1]}:z[]?`);
+            }else{
+              fields.push(`${s[1]}:z[]`);
+            }
             break;
           }
           case "Vec<ID>":
@@ -143,22 +173,38 @@ export async function generateModelFromApiType(): Promise<void> {
           case "Vec<u16>":
           case "Vec<i64>":
           case "Vec<u64>": {
-            fields.push(`${s[1]}:i[]`);
+            if (nullable){
+              fields.push(`${s[1]}:i[]?`);
+            }else{
+              fields.push(`${s[1]}:i[]`);
+            }
             break;
           }
           case "NaiveDateTime": {
-            fields.push(`${s[1]}:dt`);
+            if (nullable){
+              fields.push(`${s[1]}:dt?`);
+            }else{
+              fields.push(`${s[1]}:dt`);
+            }
             break;
           }
           default: {
             let isPlural = s[2].startsWith('Vec<');
             if (isPlural) {
-              if (s[2].endsWith('>')) {
-                s[2] = s[2].substring(0, s[2].length - 1);
+              if (_ty.endsWith('>')) {
+                _ty = _ty.substring(0, _ty.length - 1);
               }
-              fields.push(`${s[1]}:${s[2]}[]`);
+              if (nullable){
+                fields.push(`${s[1]}:${_ty}[]?`);
+              }else{
+                fields.push(`${s[1]}:${_ty}[]`);
+              }
             } else {
-              fields.push(`${s[1]}:${s[2].trim()}`);
+              if (nullable){
+                fields.push(`${s[1]}:${_ty}?`);
+              }else{
+                fields.push(`${s[1]}:${_ty}`);
+              }
             }
             break;
           }
@@ -166,6 +212,8 @@ export async function generateModelFromApiType(): Promise<void> {
       }
     }
   }
+
+  console.log(`parsed fields: ${fields}`);
 
   if (name === "") {
     window.showWarningMessage("Cannot get model name");
@@ -432,9 +480,9 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
     params.push(`this.${newFieldNameCamel}`);
     supers.push(newFieldNameCamel);
 
-    if (isNullable){
+    if (isNullable) {
       fields.push(`  final ${ty} ${newFieldNameCamel}; // Nullable`);
-    }else{
+    } else {
       fields.push(`  final ${ty} ${newFieldNameCamel};`);
     }
 
@@ -492,7 +540,7 @@ export function genCode(name: String, flutter: FlutterInfo, opts: GenModelOpts) 
 // use 'ansvia-vscode extension > Edit Model fields' instead.
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
-${opts.importDefs.filter( (a) => a !== "import 'package:equatable/equatable.dart';" && a !== "import 'package:meta/meta.dart';" ).join('\n')}
+${opts.importDefs.filter((a) => a !== "import 'package:equatable/equatable.dart';" && a !== "import 'package:meta/meta.dart';").join('\n')}
 
 /// Model for ${name}
 @immutable
