@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.3.9
+
+- [Flutter] Fixup generate model from Rust struct does not treat Option as nullable.
+- [Snippet] Added new rust snippet for test: apicallfunc
+- [Flutter] Improve edit model's fields generator.
+- [Flutter] Support nullable field by adding `?` char in field name, eg: name:z?
+            nullable field will not generate assertion code for null value in `fromMap` method.
+- [Flutter] Several minor fixes.
+- [Flutter] Fixup Edit model fields failed to reconstruct list/array with custom type name.
+
 ## 0.3.7
 
 - [Fixed] Bug edit model fields with custom type always treated as String type.
