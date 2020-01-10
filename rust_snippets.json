@@ -280,5 +280,18 @@
             "}",
             ""
         ]
-    }
+    },
+    "Create API call function for testing": {
+		"scope": "rust",
+		"prefix": "apicallfunc",
+		"body": [
+			"pub fn api_${1:name}(api: &TestKitApi, ${5:param}) -> ApiResult<${2:models::ReturnType}> {",
+			"    api.public(ApiKind::${3:System})",
+			"        .query(${6:Data})",
+			"        .${7:get}::<ApiResult<${2:models::ReturnType}>>(\"v1/${4:endpoint}\")",
+			"        .expect(\"cannot ${7:get} via API call\")",
+			"}"
+		],
+		"description": "Create API call function for testing"
+	}
 }
