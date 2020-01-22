@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.3.10
+
+- [Syncgen] Fixup cannot generate code from non explicit numeric enum type.
+
 ## 0.3.9
 
 - [Flutter] Fixup generate model from Rust struct does not treat Option as nullable.
