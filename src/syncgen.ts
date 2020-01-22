@@ -65,6 +65,7 @@ function genEnumTypes(rootDir: String, source: String, typeName: String, outs: A
 
   let reName = new RegExp('^(pub)? ?enum ' + typeName + ' ?{?$');
   let reDec = new RegExp('(\\w*) ?= ?(\\d*),?');
+  let reDecNonum = new RegExp('^(\\w*),?$');
 
   let lines = fs.readFileSync(`${rootDir}/${source}`, 'utf8').split('\n');
   var inEnumCode = false;
@@ -77,11 +78,16 @@ function genEnumTypes(rootDir: String, source: String, typeName: String, outs: A
 
   jsLines.push(`export default class ${typeName} {`);
   dartLines.push(`class ${typeName} {`);
+  var idx = 0;
 
   for (let line of lines) {
     let linet = line.trim();
+    if (linet.length === 0){
+      continue;
+    }
     if (!inEnumCode && reName.test(linet)) {
       inEnumCode = true;
+      idx = 0;
     }
     if (inEnumCode) {
       if (linet.startsWith('///')) {
@@ -90,8 +96,15 @@ function genEnumTypes(rootDir: String, source: String, typeName: String, outs: A
       } else {
         let s = reDec.exec(linet);
         if (s && s.length === 3) {
-          jsLines.push(`  static ${s[1]} = ${s[2]};`);
-          dartLines.push(`  static const int ${camelCase(s[1])} = ${s[2]};`);
+          jsLines.push(`  static ${s[1]} = ${s[2]};\n`);
+          dartLines.push(`  static const int ${camelCase(s[1])} = ${s[2]};\n`);
+        } else {
+          let s = reDecNonum.exec(linet);
+          if (s && s.length === 2) {
+            jsLines.push(`  static ${s[1]} = ${idx};\n`);
+            dartLines.push(`  static const int ${camelCase(s[1])} = ${idx};\n`);
+            idx++;
+          }
         }
       }
       if (linet === '}') {
@@ -153,8 +166,8 @@ function genErrorCodeFromRust(rootDir: String, source: String, outs: Array<Strin
       } else {
         let s = reDec.exec(linet);
         if (s && s.length === 3) {
-          jsLines.push(`  static ${s[1]} = ${s[2]};`);
-          dartLines.push(`  static const int ${camelCase(s[1])} = ${s[2]};`);
+          jsLines.push(`  static ${s[1]} = ${s[2]};\n`);
+          dartLines.push(`  static const int ${camelCase(s[1])} = ${s[2]};\n`);
         }
       }
       if (linet === '}') {
