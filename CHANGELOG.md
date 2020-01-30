@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.3.11
+
+- [Snippet] Added Rust code snippet for generate dao search method.
+
 ## 0.3.10
 
 - [Syncgen] Fixup cannot generate code from non explicit numeric enum type.
