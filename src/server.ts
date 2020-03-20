@@ -90,7 +90,7 @@ function generateServiceCode(baseDir: String, opts: ServiceOpts) {
 
   // const newCode = `impl_service!(${namePascal}Service, ${nameSnake});\n`;
 
-  insertLineInFile(`${baseDir}/services.rs`, "^impl_service!\\(", `impl_service!(${namePascal}Service, ${nameSnake});`);
+  insertLineInFile(`${baseDir}/services.rs`, "^impl_service!\\([A-Za-z]*\\w+", `impl_service!(${namePascal}Service, ${nameSnake});`);
   insertLineInFile(`${baseDir}/services.rs`, "^[\\w_]+?Service::new\\(\\),", `        ${namePascal}Service::new(),`);
 
   // fs.appendFileSync(`${baseDir}/services.rs`, newCode);
@@ -106,7 +106,6 @@ function generateApiCode(path: String, opts: ServiceOpts) {
 
 use actix_web::{HttpRequest, HttpResponse};
 use chrono::NaiveDateTime;
-use protobuf;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 
