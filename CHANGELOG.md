@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.3.13
+
+* Fixup generate CRUD API code generator wrong impl_service placement.
+* Remove protobuf from API generated code.## 0.3.13.
+
 ## 0.3.11
 
 - [Snippet] Added Rust code snippet for generate dao search method.
