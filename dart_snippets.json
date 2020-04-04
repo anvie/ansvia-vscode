@@ -153,53 +153,77 @@
         "scope": "dart",
         "prefix": "blocapiadd",
         "body": [
-    "    final data = await PublicApi.post(\"/${1:endpoint}\", {",
-    "      // @TODO(you): add params to post here",
-    "    });",
-    "",
-    "    if (data != null) {",
-    "      print(\"resp data: \\$data\");",
-    "",
-    "      repo.updateEntriesItem(\"entries\", data[\"result\"]);",
-    "",
-    "      yield ${2:Model}Created(${2:Model}.fromMap(data[\"result\"]));",
-    "",
-    "      dispatch(Load${2:Model}());",
-    "    } else {",
-    "      yield ${2:Model}Failure(error: \"Cannot add ${2:Model}\");",
-    "    }"
+            "    final data = await PublicApi.post(\"/${1:endpoint}\", {",
+            "      // @TODO(you): add params to post here",
+            "    });",
+            "",
+            "    if (data != null) {",
+            "      print(\"resp data: \\$data\");",
+            "",
+            "      repo.updateEntriesItem(\"entries\", data[\"result\"]);",
+            "",
+            "      yield ${2:Model}Created(${2:Model}.fromMap(data[\"result\"]));",
+            "",
+            "      dispatch(Load${2:Model}());",
+            "    } else {",
+            "      yield ${2:Model}Failure(error: \"Cannot add ${2:Model}\");",
+            "    }"
         ]
     },
     "Generate Flutter form field dropdown list": {
         "scope": "dart",
         "prefix": "formdropdownlist",
         "body": [
-    "  FormField(builder: (FormFieldState state) {",
-    "    return InputDecorator(",
-    "      decoration: InputDecoration(labelText: \"${1:name}\"),",
-    "      child: DropdownButtonHideUnderline(",
-    "        child: DropdownButton(",
-    "          items: <String>[${2:\"item1\"}].map((v) {",
-    "            return DropdownMenuItem(",
-    "                value: v, child: Text(v));",
-    "          }).toList(),",
-    "          value: _${3:name}Controller.text,",
-    "          onChanged: (newVal) {",
-    "            setState(() {",
-    "              _${3:name}Controller.text = newVal;",
-    "            });",
-    "          },",
-    "        ),",
-    "      ),",
-    "    );",
-    "  }),"
+            "  FormField(builder: (FormFieldState state) {",
+            "    return InputDecorator(",
+            "      decoration: InputDecoration(labelText: \"${1:name}\"),",
+            "      child: DropdownButtonHideUnderline(",
+            "        child: DropdownButton(",
+            "          items: <String>[${2:\"item1\"}].map((v) {",
+            "            return DropdownMenuItem(",
+            "                value: v, child: Text(v));",
+            "          }).toList(),",
+            "          value: _${3:name}Controller.text,",
+            "          onChanged: (newVal) {",
+            "            setState(() {",
+            "              _${3:name}Controller.text = newVal;",
+            "            });",
+            "          },",
+            "        ),",
+            "      ),",
+            "    );",
+            "  }),"
         ]
     },
     "Generate boilerplate PublicApi.get code": {
         "scope": "dart",
         "prefix": "publicapiget",
         "body": [
-    "final data = await PublicApi.get(\"${1:/path}\");"
+            "final data = await PublicApi.get(\"${1:/path}\");"
+        ]
+    },
+    "Create kind-like map": {
+        "scope": "dart",
+        "prefix": "kindmap",
+        "body": [
+            "const Map<int, ${2:Type}> ${1:SomeKind} = {",
+            "  ${3:SomeKind.systemFeed: Colors.grey},",
+            "};"
+        ]
+    },
+    "Create singleton class": {
+        "scope": "dart",
+        "prefix": "singleton",
+        "body": [
+            "class ${1:Name} {",
+            "  static final ${1:Name} _${2:name} = ${1:Name}._internal();",
+            "",
+            "  factory ${1:Name}() {",
+            "    return _${2:name};",
+            "  }",
+            "",
+            "  ${1:Name}._internal();",
+            "}"
         ]
     }
 }

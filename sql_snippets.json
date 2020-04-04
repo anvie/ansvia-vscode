@@ -1,0 +1,29 @@
+{
+    "Create sql table": {
+        "scope": "sql",
+        "prefix": "table",
+        "body": [
+            "CREATE TABLE ${1:table_name} (",
+            "  ${2:id BIGSERIAL PRIMARY KEY NOT NULL,}",
+            "  ${3:}",
+            "  ${4:ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP}",
+            ");"
+        ]
+    },
+    "Create sql index": {
+        "scope": "sql",
+        "prefix": "index",
+        "body": [
+            "CREATE INDEX idx_${1:name} ON ${2:table_name} (",
+            "    (${3:lower(${4:column_name})})",
+            ");"
+        ]
+    },
+    "Create DROP TABLE...": {
+        "scope": "sql",
+        "prefix": "dropt",
+        "body": [
+            "DROP TABLE ${1:table_name};"
+        ]
+    }
+}

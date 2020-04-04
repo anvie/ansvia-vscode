@@ -46,6 +46,10 @@
             {
                 "language": "dart",
                 "path": "./dart_snippets.json"
+            },
+            {
+                "language": "sql",
+                "path": "./sql_snippets.json"
             }
         ]
     },

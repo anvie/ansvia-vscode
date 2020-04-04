@@ -175,20 +175,20 @@
             "    filterer = Box::new(filterer.and(dsl::name.like(&like_clause)));",
             "",
             "    Ok(EntriesResult::new(",
-			"          dsl::${1:model_name}s",
-			"                .filter(&filterer)",
-			"                .offset(offset)",
-			"                .limit(limit)",
-			"                .load::<${2:Model}>(self.db)?,",
-			"          dsl::${1:model_name}s",
-			"                .filter(filterer)",
-			"                .select(diesel::dsl::count(dsl::id))",
-			"                .first(self.db)?,",
+            "          dsl::${1:model_name}s",
+            "                .filter(&filterer)",
+            "                .offset(offset)",
+            "                .limit(limit)",
+            "                .load::<${2:Model}>(self.db)?,",
+            "          dsl::${1:model_name}s",
+            "                .filter(filterer)",
+            "                .select(diesel::dsl::count(dsl::id))",
+            "                .first(self.db)?,",
             "    ))",
             "}"
         ]
     },
-    "Implement From": {
+    "Implement From model to ApiType": {
         "prefix": "implfrommodeltoapitype",
         "body": [
             "impl From<models::${1:Name}> for ${1:Name} {",
@@ -321,5 +321,31 @@
             "}"
         ],
         "description": "Create API call function for testing"
+    },
+    "Create conn:&PgConnection param": {
+        "scope": "rust",
+        "prefix": "connp",
+        "body": [
+            "conn: &PgConnection"
+        ]
+    },
+    "Create diesel boxable query": {
+        "scope": "rust",
+        "prefix": "boxablequery",
+        "body": [
+            "let mut ${1:filterer}: Box<dyn BoxableExpression<${2:table_name}::table, _, SqlType = sql_types::Bool>> =",
+            "            Box::new(${3:dsl::id.ne(0)});"
+        ]
+    },
+    "Impl From template": {
+        "scope": "rust",
+        "prefix": "impfrom",
+        "body": [
+            "impl From<${1:type}> for ${2:TypeName} {",
+            "    fn from(a: ${1:type}) -> Self {",
+            "        ${3:}",
+            "    }",
+            "}"
+        ]
     }
 }
