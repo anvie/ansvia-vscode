@@ -5,7 +5,7 @@
     "publisher": "Ansvia",
     "repository": "https://github.com/anvie/ansvia-vscode",
     "license": "SEE LICENSE IN LICENSE",
-    "version": "0.3.14",
+    "version": "0.3.16",
     "engines": {
         "vscode": "^1.36.0",
         "node": ">=6.0.0"
@@ -50,6 +50,14 @@
             {
                 "language": "sql",
                 "path": "./sql_snippets.json"
+            },
+            {
+                "language": "javascript",
+                "path": "./javascript.snippets.json"
+            },
+            {
+                "language": "vue-html",
+                "path": "./vue-html.snippets.json"
             }
         ]
     },
