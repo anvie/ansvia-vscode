@@ -1,6 +1,7 @@
 import { getRootDir, ProjectType, openFile, normalizeName, nameToPlural, insertLineInFile } from "./util";
 import { window, Position } from "vscode"; import { Field } from "./field";
 import { getExtensionConfig } from "./extension";
+import clipboardy = require('clipboardy');
 
 const snakeCase = require('snake-case');
 const pascalCase = require('pascal-case');
@@ -414,7 +415,7 @@ struct New${namePascal}<'a> {`);
 
 }
 
-function generateModelCode(name: String, fields: String[], newMode: boolean) {
+function generateModelCode(name: String, fields: String[], newMode: boolean, fieldsOnly: boolean=false) {
   //   const editor = window.activeTextEditor!;
   const namePascal = pascalCase(name);
   //   const nameSnake = snakeCase(name);
@@ -524,18 +525,20 @@ function generateModelCode(name: String, fields: String[], newMode: boolean) {
 
   var newLines = [];
 
-  if (newMode) {
-    newLines.push(`
+  if (!fieldsOnly){
+    if (newMode) {
+      newLines.push(`
 #[doc(hidden)]
 #[derive(Queryable, Serialize)]
 pub struct ${namePascal}<'a> {
-    `.trim());
-  } else {
-    newLines.push(`
+      `.trim());
+    } else {
+      newLines.push(`
 #[doc(hidden)]
 #[derive(Queryable, Serialize)]
 pub struct ${namePascal} {
-    `.trim());
+      `.trim());
+    }
   }
 
   for (let fld of newFields) {
@@ -545,3 +548,124 @@ pub struct ${namePascal} {
 
   return newLines.join('\n');
 }
+
+
+export async function generateGraphQLFieldsFromSQL() {
+
+  const reField = new RegExp('^\"?([\\w_]*?)\"? *?(BIGSERIAL|BIGINT|INT|INTEGER|DECIMAL|SMALLINT|SERIAL|VARCHAR|TEXT|FLOAT|DOUBLE|BOOLEAN|TIMESTAMP)(\\[\\])?');
+
+  const editor = window.activeTextEditor!;
+
+  const text = editor.document.getText(editor.selection);
+
+  let lines = text.split('\n');
+  let fields = [];
+
+  function genMethod(field:string, ty:string){
+    let code = [];
+    code.push(`    pub fn ${field}(&self) -> ${ty} {`);
+    if (ty == "&str"){
+      code.push(`        self.${field}.as_str()`);
+    }else if (ty.startsWith("&")){
+      code.push(`        &self.${field}`);
+    }else{
+      code.push(`        self.${field}`);
+    }
+    code.push("    }");
+    return code.join("\n");
+  }
+
+  for (let line of lines) {
+    var s;
+    var linet = line.trim();
+
+    s = reField.exec(linet);
+
+    if (s === null) {
+      continue;
+    }
+
+    const field = s[1].trim();
+    const sqlTy = s[2].toLowerCase();
+    const isPlural = s[3] ? true : false;
+
+    switch (sqlTy) {
+      case "smallint": {
+        if (isPlural) {
+          fields.push(genMethod(field, "&Vec<i16>"));
+        } else {
+          fields.push(genMethod(field, "i16"));
+        }
+        break;
+      }
+      case "bigserial":
+      case "bigint":
+      case "int":
+      case "integer":
+      case "numeric":
+      case "decimal":
+      case "serial": {
+        if (isPlural) {
+          fields.push(genMethod(field, "&Vec<i32>"));
+        } else {
+          // if (field === 'id' || field.endsWith('_id')) {
+          //   fields.push(`${field}:id`);
+          // } else {
+            fields.push(genMethod(field, "i32"));
+          // }
+        }
+        break;
+      }
+      case "float":
+      case "double": {
+        if (isPlural) {
+          fields.push(genMethod(field, "Vec<f32>"));
+        } else {
+          fields.push(genMethod(field, "f32"));
+        }
+        break;
+      }
+      case "varchar":
+      case "text": {
+        if (isPlural) {
+          fields.push(genMethod(field, "&Vec<String>"));
+        } else {
+          fields.push(genMethod(field, "&str"));
+        }
+        break;
+      }
+      case "boolean": {
+        if (isPlural) {
+          fields.push(genMethod(field, "&Vec<bool>"));
+        } else {
+          fields.push(genMethod(field, "bool"));
+        }
+        break;
+      }
+      case "timestamp": {
+        fields.push(genMethod(field, "NaiveDateTime"));
+      }
+    }
+  }
+
+  const rootDir = getRootDir(ProjectType.Server);
+
+  if (!rootDir) {
+    return;
+  }
+
+  const generatedCode = fields.join("\n");
+
+  let extConfig = getExtensionConfig();
+
+  console.log("extConfig:");
+  console.log(extConfig);
+
+  var modelFilePath = extConfig.serverModelFile();
+  console.log("modelFilePath: " + modelFilePath);
+
+  clipboardy.writeSync(generatedCode);
+  window.showInformationMessage("Generated code copied into clipboard!");
+}
+
+

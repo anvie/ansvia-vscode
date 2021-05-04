@@ -1,4 +1,12 @@
 {
+    "Create todo": {
+        "scope": "rust",
+        "prefix": "todo",
+        "description": "Generate basic todo template",
+        "body": [
+            "// @TODO(${1:*}): $2"
+        ]
+    },
     "Write derive(Serialize)": {
         "scope": "rust",
         "prefix": "derser",
@@ -252,7 +260,7 @@
     "use crate::schema...": {
         "prefix": "usecrateschema",
         "scope": "rust",
-        "body": "use crate::schema::${1:models}::{self, dsl};"
+        "body": "use crate::schema::dsl::${1:models}::{self, ${1:models}};"
     },
     "Create ApiResult::success": {
         "prefix": "apiresultsucess",

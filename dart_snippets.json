@@ -1,4 +1,12 @@
 {
+    "Create todo": {
+        "scope": "dart",
+        "prefix": "todo",
+        "description": "Generate basic todo template",
+        "body": [
+            "// @TODO(${1:*}): $2"
+        ]
+    },
     "Create BlocBuilder code": {
         "prefix": "blocbuilder",
         "body": [

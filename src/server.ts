@@ -1,7 +1,7 @@
 import { getRootDir, ProjectType, openFile, insertLineInFile } from "./util";
 import { window, ExtensionContext, commands } from "vscode";
 import { Cmd } from "./cmd";
-import { generateModel, ServerOpts, ServerKind, generateModelFromSQLDef, generateNewModelTypeFromModel } from "./server_model";
+import { generateModel, ServerOpts, ServerKind, generateModelFromSQLDef, generateNewModelTypeFromModel, generateGraphQLFieldsFromSQL } from "./server_model";
 
 import snakeCase = require('snake-case');
 import camelCase = require('camel-case');
@@ -33,6 +33,7 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate DAO update method from model and copy to clipboard", () => copyDaoUpdateMethod(new DaoOpts(DaoKind.UpdateMethod))),
       new Cmd("Generate DAO add method from model and copy to clipboard", () => copyDaoAddMethod()),
       new Cmd("Generate API update method", () => generateApiUpdateMethod()),
+      new Cmd("GraphQL fields mapping from SQL fields (copy to clipboard)", () => generateGraphQLFieldsFromSQL()),
       // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
     ];
     quickPick.onDidChangeSelection(selection => {

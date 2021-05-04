@@ -1,5 +1,5 @@
 
-import { ExtensionContext, workspace, TextDocument } from 'vscode';
+import { ExtensionContext, workspace, TextDocument, window } from 'vscode';
 
 import * as flutter from './flutter';
 import * as service from './server';
@@ -33,6 +33,7 @@ class ExtensionConfig {
     if (fs.existsSync(path)) {
       return path;
     }
+    window.showWarningMessage("Model path not exists: " + path + ". use default instead: " + this.serverRootDir + "/src");
     return `${this.serverRootDir}/src`;
   }
 

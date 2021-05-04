@@ -1,4 +1,12 @@
 {
+    "Create todo": {
+        "scope": "sql",
+        "prefix": "todo",
+        "description": "Generate basic todo template",
+        "body": [
+            "-- @TODO(${1:*}): $2"
+        ]
+    },
     "Create sql table": {
         "scope": "sql",
         "prefix": "table",
