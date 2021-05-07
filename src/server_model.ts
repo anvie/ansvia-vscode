@@ -563,11 +563,21 @@ export async function generateGraphQLFieldsFromSQL() {
 
   function genMethod(field:string, ty:string){
     let code = [];
-    code.push(`    pub fn ${field}(&self) -> ${ty} {`);
+    if (ty == "i64"){
+      code.push(`    pub fn ${field}(&self) -> String {`);
+    }else if (ty == "i16"){
+      code.push(`    pub fn ${field}(&self) -> i32 {`);
+    }else{
+      code.push(`    pub fn ${field}(&self) -> ${ty} {`);
+    }
     if (ty == "&str"){
       code.push(`        self.${field}.as_str()`);
     }else if (ty.startsWith("&")){
       code.push(`        &self.${field}`);
+    } else if (ty == "i64"){ // i64 di js gak support, jadi dibuat String
+      code.push(`        format!("{}", self.${field})`);
+    } else if (ty == "i16"){ // i16 di js gak support, jadi dicasting ke i32
+      code.push(`        self.${field} as i32`);
     }else{
       code.push(`        self.${field}`);
     }
@@ -598,8 +608,22 @@ export async function generateGraphQLFieldsFromSQL() {
         }
         break;
       }
-      case "bigserial":
-      case "bigint":
+      case "bigserial":{
+        if (isPlural) {
+          fields.push(genMethod(field, "&Vec<i64>"));
+        } else {
+          fields.push(genMethod(field, "i64"));
+        }
+        break;
+      }
+      case "bigint":{
+        if (isPlural) {
+          fields.push(genMethod(field, "&Vec<i64>"));
+        } else {
+          fields.push(genMethod(field, "i64"));
+        }
+        break;
+      }
       case "int":
       case "integer":
       case "numeric":

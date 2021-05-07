@@ -219,17 +219,17 @@
     "Create diesel insert code": {
         "prefix": "dieselinsert",
         "body": [
-            "use crate::schema::${1:name}::{self, dsl};",
-            "diesel::insert_into(${1:name}::table)",
+            "use crate::schema::${1:name}::dsl::{self, ${1:name}};",
+            "diesel::insert_into(${1:name})",
             "    .values(&${2:})",
-            "    .execute(&conn)",
+            "    .execute(conn)",
             "    ${3:.map_err(From::from)}?;"
         ]
     },
     "Create diesel select code": {
         "prefix": "dieselselect",
         "body": [
-            "${1:tablenames}::table",
+            "${1:tablenames}",
             "    .filter(dsl::${2:field}.eq(${2:field}))",
             "    .select(dsl::${3:field})",
             "    .first(conn)?"
@@ -260,14 +260,7 @@
     "use crate::schema...": {
         "prefix": "usecrateschema",
         "scope": "rust",
-        "body": "use crate::schema::dsl::${1:models}::{self, ${1:models}};"
-    },
-    "Create ApiResult::success": {
-        "prefix": "apiresultsucess",
-        "scope": "rust",
-        "body": [
-            "Ok(ApiResult::success(${1:()}))"
-        ]
+        "body": "use crate::schema::${1:models}::dsl::{self, ${1:models}};"
     },
     "use diesel::prelude::*;": {
         "prefix": "usedieselprelude",
