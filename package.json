@@ -5,7 +5,7 @@
     "publisher": "Ansvia",
     "repository": "https://github.com/anvie/ansvia-vscode",
     "license": "SEE LICENSE IN LICENSE",
-    "version": "0.3.16",
+    "version": "0.4.0",
     "engines": {
         "vscode": "^1.36.0",
         "node": ">=6.0.0"
@@ -81,6 +81,7 @@
         "clipboardy": "^2.1.0",
         "js-yaml": "^3.13.1",
         "pascal-case": "^2.0.1",
-        "snake-case": "^2.1.0"
+        "snake-case": "^2.1.0",
+        "vsce": "^1.88.0"
     }
 }

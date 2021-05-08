@@ -27,7 +27,7 @@ class ExtensionConfig {
   }
 
   serverModelDir(): string {
-    let path = `${this.serverRootDir}/src/${this.yamlData["server"]["model_dir"]}`;
+    let path = `${this.serverRootDir}/${this.yamlData["server"]["model_dir"]}`;
     console.log("path: " + path);
 
     if (fs.existsSync(path)) {

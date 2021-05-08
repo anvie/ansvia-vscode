@@ -33,8 +33,7 @@ export function setup(context: ExtensionContext) {
       new Cmd("Generate DAO update method from model and copy to clipboard", () => copyDaoUpdateMethod(new DaoOpts(DaoKind.UpdateMethod))),
       new Cmd("Generate DAO add method from model and copy to clipboard", () => copyDaoAddMethod()),
       new Cmd("Generate API update method", () => generateApiUpdateMethod()),
-      new Cmd("GraphQL fields mapping from SQL fields (copy to clipboard)", () => generateGraphQLFieldsFromSQL()),
-      // new Cmd("Generate CRUD Screen Page (stateless)", () => generateFlutter({statefulScreenPage: false}) ),
+      new Cmd("GraphQL fields mapping from SQL fields (copy to clipboard)", () => generateGraphQLFieldsFromSQL())
     ];
     quickPick.onDidChangeSelection(selection => {
       if (selection[0]) {
