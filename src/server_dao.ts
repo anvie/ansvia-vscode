@@ -384,7 +384,7 @@ export async function copyDaoAddMethod() {
     let nameSnake = snakeCase(model.name);
 
     newLines.push(`        use crate::schema::${nameSnake}s::{self, dsl};
-        diesel::insert_into(courier_services::table)
+        diesel::insert_into(${nameSnake}s::table)
             .values(&New${namePascal} {`);
 
 
