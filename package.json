@@ -16,7 +16,8 @@
     "activationEvents": [
         "onLanguage:dart",
         "onLanguage:rust",
-        "onLanguage:sql"
+        "onLanguage:sql",
+        "onCommand:extension.server"
     ],
     "main": "./out/extension.js",
     "contributes": {
