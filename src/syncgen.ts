@@ -27,13 +27,14 @@ export function setupSyncGen() {
     workspace.onDidSaveTextDocument((document: TextDocument) => {
       console.log(`document saved: ${document.fileName}`);
       const c = sync_gen['error_code'];
-      if (c === null) {
-        window.showErrorMessage("Invalid error_code parameter");
-        return;
-      }
-      if (document.fileName === `${rootDir}/${c['src']}`) {
+      // if (c === null) {
+      //   window.showErrorMessage("Invalid error_code parameter");
+      //   return;
+      // }
+      if (c && document.fileName === `${rootDir}/${c['src']}`) {
         genErrorCodeFromRust(rootDir, c['src'], c['outs']);
       }
+
       const enumTypes: Array<any> = sync_gen["enum_types"];
       if (enumTypes === null) {
         return;
