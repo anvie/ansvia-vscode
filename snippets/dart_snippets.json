@@ -1,4 +1,12 @@
 {
+    "Create todo": {
+        "scope": "dart",
+        "prefix": "todo",
+        "description": "Generate basic todo template",
+        "body": [
+            "// @TODO(${1:*}): $2"
+        ]
+    },
     "Create BlocBuilder code": {
         "prefix": "blocbuilder",
         "body": [
@@ -18,7 +26,7 @@
             "    //@TODO(*): code here",
             "    return ${1:NameBloc};",
             "  },",
-            "  child: ${2:Container()}",
+            "  child: ${2:}",
             ");"
         ]
     },
@@ -60,10 +68,11 @@
             "Stream<${1:name}State> _map${2:Event}ToState(${3:Event} event) async* {",
             "  yield ${1:name}Loading();",
             "",
-            "  final data = await PublicApi.post(\"${4:/api}\", {",
+            "  final data = await PublicApi.post(\"${4:}\", {",
             "      // @TODO(you): add data to post here",
             "  });",
             "  if (data != null) {",
+            "    print(\"data: $$data\");",
             "",
             "    yield ${1:name}Added(${1:name}.fromMap(data[\"result\"]));",
             "  } else {",
@@ -82,7 +91,7 @@
             "      // @TODO(you): set data to post here",
             "  });",
             "  if (data != null) {",
-            "    print(\"data: \\$data\");",
+            "    print(\"data: $$data\");",
             "",
             "    yield ${1:name}Updated(${1:name}.fromMap(data[\"result\"]));",
             "  } else {",
@@ -157,6 +166,7 @@
             "    });",
             "",
             "    if (data != null) {",
+            "      print(\"resp data: \\$data\");",
             "",
             "      repo.updateEntriesItem(\"entries\", data[\"result\"]);",
             "",
@@ -223,21 +233,5 @@
             "  ${1:Name}._internal();",
             "}"
         ]
-    },
-    "Create Navigator.pop code": {
-        "prefix": "navigatorpop",
-        "body": "Navigator.pop(context);"
-    },
-    "Create Navigator.push": {
-        "prefix": "navigatorpush",
-        "body": "Navigator.of(context).push(${1:});"
-    },
-    "Create Navigator.push Material route": {
-        "prefix": "navpushmaterialroute",
-        "body": "Navigator.of(context).push(MaterialPageRoute(builder: (context) => ${1:SomePage()}()));"
-    },
-    "Create Navigator.push named": {
-        "prefix": "navigatorpushnamed",
-        "body": "Navigator.of(context).pushNamed(${1:\"\"});"
     }
 }

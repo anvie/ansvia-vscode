@@ -46,11 +46,11 @@
             },
             {
                 "language": "dart",
-                "path": "./dart_snippets.json"
+                "path": "./snippets/dart_snippets.json"
             },
             {
                 "language": "sql",
-                "path": "./sql_snippets.json"
+                "path": "./snippets/sql_snippets.json"
             },
             {
                 "language": "javascript",

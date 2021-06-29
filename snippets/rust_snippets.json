@@ -90,13 +90,13 @@
         "body": [
             "/// Update ${1:name}.",
             "#[api_endpoint(path = \"/${2:path}\", auth = \"required\", mutable)]",
-            "pub fn update_${3:something}(query: Update${3:Thing}) -> ApiResult<()> {",
-            "    use crate::schema::${4:schema}s::{self, dsl};",
+            "pub fn update_${3:something}(query: Update${4:Thing}) -> ApiResult<()> {",
+            "    use crate::schema::${5:schema}s::{self, dsl};",
             "    let conn = state.db();",
-            "    diesel::update(dsl::${4:schema}s.filter(dsl::id.eq(query.id)))",
+            "    diesel::update(dsl::${5:schema}s.filter(dsl::id.eq(query.id)))",
             "        .set(dsl::name.eq(&query.name))",
-            "        .execute(&conn)",
-            "        .map_err(From::from)?;",
+            "        .execute(&conn)?",
+            "",
             "    Ok(ApiResult::success(()))",
             "}"
         ]
