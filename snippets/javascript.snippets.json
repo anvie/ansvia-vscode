@@ -1,0 +1,19 @@
+{
+    "Create API call routine": {
+        "scope": "javascript",
+        "prefix": "apipostcall",
+        "body": [
+            "this.$${1:project_name}",
+            "        .api()",
+            "        .publicApi.post(\"/${2:path}\", {",
+            "          ${3:name: name,}",
+            "        })",
+            "        .then(resp => {",
+            "          if (resp.data.code == 0) {",
+            "          } else {",
+            "            this.showError(\"Cannot ${4:xxx}. \" + resp.data.description);",
+            "          }",
+            "        });"
+        ]
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "Add DialogModal for add operation": {
+        "scope": "vue",
+        "prefix": "dialogmodaladd",
+        "body": [
+            "    <DialogModal",
+            "      modalName=\"${1:Name}\"",
+            "      caption=\"${2:Caption}\"",
+            "      :withCloseButton=\"true\"",
+            "      @onApprove=\"${3:onApprove}\"",
+            "      @opened=\"${4:onOpened}\"",
+            "      :buttonsText=\"{reject: 'Cancel', approve: 'Ok'}\"",
+            "    >",
+            "      <template v-slot:content>",
+            "        <h2 class=\"ui header\">${2:Caption}</h2>",
+            "",
+            "        <div style=\"text-align: left;\">",
+            "          <div class=\"ui form\">",
+            "            <div class=\"field\">",
+            "              <label>Name:</label>",
+            "              <input ref=\"nameInput\" type=\"text\" name=\"NameInput\" id=\"NameInput\" />",
+            "            </div>",
+            "          </div>",
+            "        </div>",
+            "        ",
+            "      </template>",
+            "    </DialogModal>"
+        ]
+    }
+}

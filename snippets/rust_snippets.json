@@ -90,7 +90,7 @@
         "body": [
             "/// Update ${1:name}.",
             "#[api_endpoint(path = \"/${2:path}\", auth = \"required\", mutable)]",
-            "pub fn update_${2:something}(query: Update${3:Thing}) -> ApiResult<()> {",
+            "pub fn update_${3:something}(query: Update${3:Thing}) -> ApiResult<()> {",
             "    use crate::schema::${4:schema}s::{self, dsl};",
             "    let conn = state.db();",
             "    diesel::update(dsl::${4:schema}s.filter(dsl::id.eq(query.id)))",
